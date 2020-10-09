@@ -52,6 +52,8 @@ Now, grant access to the teaching staff
 You should grant the following users *Reporter* access:
   * Aaron Smith (username: asmith47)
   * Dmitrii Ustiugov (username: s1373190)  
+  * Siavash Katebzadeh (username: s1691546)  
+  * David Schall (username: s2033074)  
 
 Next, you will have to clone the forked repository to your local machine. In order to clone the repository you should launch a terminal and type:
 
