@@ -3,7 +3,7 @@
 Please note that the description of the course work might be updated from time to time to clarify things or fix mistakes.
 
 # Scoreboard #
-We will automatically run a series of hidden test inputs with your programs about twice a day. The scorboard is provided as a best effort service, do not rely on it as it may come down unexpectedly: no guarantees are offered. 
+We will automatically run a series of hidden test inputs with your programs about twice a day. The scoreboard is provided as a best effort service, do not rely on it as it may come down unexpectedly: no guarantees are offered. 
 
 [link to scoreboard be added soon]
 
