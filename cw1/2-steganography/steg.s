@@ -24,7 +24,7 @@ newline:                      .asciiz  "\n"
 # Global variables in memory
 #-------------------------------------------------------------------------
 # 
-input_text:                   .space 10001       # Maximun size of input_text_file + NULL
+input_text:                   .space 10001       # Maximum size of input_text_file + NULL
 .align 4                                         # The next field will be aligned
 
 # You can add your data here!
