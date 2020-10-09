@@ -1,7 +1,7 @@
 #=========================================================================
-# Word Finder 
+# Steganography
 #=========================================================================
-# Finds words in a given text.
+# Retrive a secret message from a given text.
 # 
 # Inf2C Computer Systems
 # 
