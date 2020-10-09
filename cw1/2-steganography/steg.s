@@ -17,8 +17,8 @@
 # Constant strings
 #-------------------------------------------------------------------------
 
-input_text_file_name:         .asciiz  "input_words.txt"
-newline:                .asciiz  "\n"
+input_text_file_name:         .asciiz  "input_steg.txt"
+newline:                      .asciiz  "\n"
         
 #-------------------------------------------------------------------------
 # Global variables in memory

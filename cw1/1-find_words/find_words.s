@@ -18,7 +18,7 @@
 #-------------------------------------------------------------------------
 
 input_text_file_name:         .asciiz  "input_words.txt"
-newline:                .asciiz  "\n"
+newline:                      .asciiz  "\n"
         
 #-------------------------------------------------------------------------
 # Global variables in memory
