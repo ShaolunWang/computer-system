@@ -1,7 +1,7 @@
 #=========================================================================
-# XOR Cipher Encryption
+# Book Cipher Decryption
 #=========================================================================
-# Encrypts a given text with a given key.
+# Decrypts a given encrypted text with a given book.
 # 
 # Inf2C Computer Systems
 # 
