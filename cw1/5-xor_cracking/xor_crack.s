@@ -98,7 +98,7 @@ END_LOOP:
 
         move $t0, $0                    # idx = 0
 
-READ_LOOP:                              # do {
+READ_LOOP1:                              # do {
         li   $v0, 14                    # system call for reading from file
         move $a0, $s0                   # file descriptor
                                         # hint[idx] = c_input
@@ -111,7 +111,7 @@ READ_LOOP:                              # do {
         beq  $t1, $v0, END_LOOP         # if(c_input == '\n')
         addi $t0, $t0, 1                # idx += 1
         j    READ_LOOP
-END_LOOP:
+END_LOOP1:
         sb   $0,  hint($t0)             # hint[idx] = '\0'
 
         # Close the file 
