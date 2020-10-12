@@ -98,18 +98,18 @@ END_LOOP:
 
         move $t0, $0                    # idx = 0
 
-READ_LOOP1:                              # do {
+READ_LOOP1:                             # do {
         li   $v0, 14                    # system call for reading from file
         move $a0, $s0                   # file descriptor
                                         # book[idx] = c_input
-        la   $a1, book($t0)              # address of buffer from which to read
+        la   $a1, book($t0)             # address of buffer from which to read
         li   $a2,  1                    # read 1 char
         syscall                         # c_input = fgetc(book_file);
-        blez $v0, END_LOOP              # if(feof(book_file)) { break }
+        blez $v0, END_LOOP1             # if(feof(book_file)) { break }
         lb   $t1, book($t0)          
-        beq  $t1, $0,  END_LOOP        # if(c_input == '\0')
+        beq  $t1, $0,  END_LOOP1        # if(c_input == '\0')
         addi $t0, $t0, 1                # idx += 1
-        j    READ_LOOP
+        j    READ_LOOP1
 END_LOOP1:
         sb   $0,  book($t0)             # book[idx] = '\0'
 
