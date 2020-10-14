@@ -81,13 +81,47 @@ END_LOOP:
         syscall                         # fclose(input_text_file)
 
 
+
+
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
 
 
+
+
 # You can add your code here!
 
+# What do I know: 		Everything is stored in the input_text
+# What do I need to do: process every char and check whether it's a space
+
+LOAD:
+	
+	la $t3, input_text				 				# get address of the input text
+	 					# get char
+	j CHECK 						# jump
+
+CHECK:
+	blez $s0, main_end
+	lb $s0, 0($t3)						#end if no char
+	li  $t1, 32 		   			# ascii value for space in $t1
+	beq $t1, $s0, MODIFY 			# current char stored in $s1
+	j PRINT
+	
+MODIFY:
+	la $s0, 10 
+	j PRINT
+
+PRINT:
+	li  $v0, 11
+	add $a0, $0, $s0
+	syscall
+
+	addi $t3, $t3, 1
+	
+	
+	 
+	j CHECK
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
