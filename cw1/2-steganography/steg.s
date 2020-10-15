@@ -35,8 +35,6 @@ input_text:                   .space 10001       # Maximum size of input_text_fi
 .text
 
 #-------------------------------------------------------------------------
-
-
 # MAIN code block
 #-------------------------------------------------------------------------
 
@@ -82,84 +80,101 @@ END_LOOP:
         move $a0, $s0                   # file descriptor to close
         syscall                         # fclose(input_text_file)
 
-
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
 
-# what's the goal: decrypt
-# how to decrypt: yread it line by line, with a counter counting lines read
-# 				  the number of the counter indicates which word to read
-# More specifically: double loop + output
 
 li  $s1, 0          # the line counter
 la  $t1, input_text # input text address in $t1
-li  $t2, 10 		 # store \n here
-li  $t3, 32 		 # store space here
 add $t4, $0, $t1    # the input file index 
 
 call:
-	
-	
  	 jal init
- 
 	 j readline
 	 
 init:
-		
-		# the "init", to initialize
-		
-		
+		li  $s0, 0			# 0 = not printed, 1 = printed
+		#init on every realine loop
 		li  $t7, 0          # the space counter
 		jr $ra
 		
 readline:
-		# this part only read one line, stopps at \n (ascii = 10)
-		# part 1:
-		# the counter = space before the word
-		# cond 1 no space
-		# cond 2 more spaces
-		# 
-		# part 2:
-		# filter out the line if counter > space count
-		# 
-		# jump
-		#---------------------------------------
-		
-	#	sw $s7, 4($sp)       # save a copy of our return address
-	#	jr $s7               # jump to return address
-		
 
 	 	lb   $t5, 0($t4)      # load char at index ($t4)
-		beqz $t5, main_end    # if null finish reading the file
-		beq  $t5, $t2, pAddj  # if \n, line counter +1, index pointer +1, and we read the next line 
-		beq  $t5, $t3, space  # if space, check if line count == space count
-			
-
-pAddj:
+		j check
+		
+check:
+		beq  $t5, $0, main_end    # if null finish reading the file
+		beq  $t5, 10, pAddj  # if \n, line counter +1, index pointer +1, and we read the next line 
+		beq  $t5, 32, space  # if space, check if line count == space count
+		beq  $s1, $0 , output # print the first word in the first line
+		
 		addi $t4, $t4, 1
-	    j  addline
+		j readline
+
+
 		
 space:
-		beq $t7, $s1, output
-		addi $t4, $t4, 1
-		j readline           #continue reading the line
-
-output:
-
-
-
-addline:
-		li $v0, 11
-		li $a0, 10  		# output \n
-		syscall
+	
+	addi $t7, $t7, 1		# space counter +1
+	addi $t4, $t4, 1
+	
+	j output
 		
-		addi $s1, $s1, 1      # after finish reading a line we add 1 to the counter
+output:
+	lb   $t5, 0($t4)      # load char at index ($t4)
+    beq $s0, 1, pword
+
+	bne $s1, $t7, readline 	# if space != line count then keep reading	
+	beq $t5, 10, cword		# handle exception
+	beq $t5, 32, pword		# handle exception
+	
+	li  $v0, 11
+	add $a0, $0, $t5
+	syscall
+	addi $t4, $t4, 1
+	j output
+
+pword:
+	li $s0, 1
+	addi $t4, $t4, 1
+	j check
+cword:
+	li $v0, 11
+	li $a0, 10
+	syscall
+	
+	j call
+
+pAddj:
+		
+		# I didn't call output here
+		addi $t4, $t4, 1
+	    addi $s1, $s1, 1
+	    beq  $a0, 32, call
+	    beq  $a0, 10, call  
+	    
+	    lb $s3, 1($t4)
+	    beq $s3, $0, checkend
+	    
+	    sub $t6, $t7, $s1
+    	blt $t6, $0, changeline
+	    
+	    li   $v0, 11
+	    addi $a0, $0, 32
+		syscall
 		
 		j call
 		
-		
-
+changeline:
+	li   $v0, 11
+	addi $a0, $0, 32
+	syscall
+	j call
+	
+checkend:
+	j main_end
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK

@@ -109,7 +109,7 @@ CHECK:
 	j PRINT
 	
 MODIFY:
-	la $s0, 10 
+	li $s0, 10 
 	j PRINT
 
 PRINT:
