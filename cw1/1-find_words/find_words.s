@@ -1,7 +1,7 @@
 #=========================================================================
-# Word Finder 
+# Steganography
 #=========================================================================
-# Finds words in a given text.
+# Retrive a secret message from a given text.
 # 
 # Inf2C Computer Systems
 # 
@@ -17,7 +17,7 @@
 # Constant strings
 #-------------------------------------------------------------------------
 
-input_text_file_name:         .asciiz  "input_words.txt"
+input_text_file_name:         .asciiz  "input_steg.txt"
 newline:                      .asciiz  "\n"
         
 #-------------------------------------------------------------------------
@@ -35,6 +35,8 @@ input_text:                   .space 10001       # Maximum size of input_text_fi
 .text
 
 #-------------------------------------------------------------------------
+
+
 # MAIN code block
 #-------------------------------------------------------------------------
 
@@ -81,14 +83,18 @@ END_LOOP:
         syscall                         # fclose(input_text_file)
 
 
-
-
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
 
 
+li  $s1, 0          # the line counter
+la  $t1, input_text # input text address in $t1
+li  $t2, 10 		 # store \n here
+li  $t3, 32 		 # store space here
+add $t4, $0, $t1    # the input file index 
 
+<<<<<<< HEAD
 
 # You can add your code here!
 
@@ -118,14 +124,65 @@ PRINT:
 	syscall
 
 	addi $t3, $t3, 1
+=======
+call:
+>>>>>>> 067c893faba6592018300e1202f709f748edc6b0
 	
 	
+ 	 jal init
+ 
+	 j readline
 	 
-	j CHECK
+init:
+		#init on every realine loop
+		li  $t7, 0          # the space counter
+		jr $ra
+		
+readline:
+
+	 	lb   $t5, 0($t4)      # load char at index ($t4)
+		beqz $t5, main_end    # if null finish reading the file
+		beq  $t5, $t2, pAddj  # if \n, line counter +1, index pointer +1, and we read the next line 
+		beq  $t5, $t3, space  # if space, check if line count == space count
+
+pAddj:
+		addi $t4, $t4, 1
+	    addi $s1, $s1, 1
+	    li      $v0, 11
+	    addi $a0, $0, 10
+		syscall
+		
+		j call
+		
+
+		
+space:
+		beq $t7, $s1, output
+		
+		addi $t7, $t7, 1	
+		jal printspace          
+		j readline					#continue reading the line
+
+output:
+			lb   $t5, 0($t4)      # load char at index ($t4)
+			
+			li  $v0, 11
+			add $a0, $0, $t5
+			syscall
+			
+			addi $t4, $t4, 1
+			beq $t5, $t3, readline
+			j space
+			
+printspace:
+			li $v0, 11, 
+			add $a0, $0, 32
+			syscall
+			jr $ra
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
-#------------------------------------------------------------------
+#-----------------------------------------------------------------
 main_end:      
         li   $v0, 10          # exit()
         syscall
