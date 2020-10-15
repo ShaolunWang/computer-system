@@ -63,12 +63,12 @@ READ_LOOP:                              # do {
         li   $v0, 14                    # system call for reading from file
         move $a0, $s0                   # file descriptor
                                         # input_text[idx] = c_input
-        la   $a1, input_text($t0)             # address of buffer from which to read
+        la   $a1, input_text($t0)       # address of buffer from which to read
         li   $a2,  1                    # read 1 char
         syscall                         # c_input = fgetc(input_text_file);
         blez $v0, END_LOOP              # if(feof(input_text_file)) { break }
         lb   $t1, input_text($t0)          
-        beq  $t1, $0,  END_LOOP        # if(c_input == '\0')
+        beq  $t1, $0,  END_LOOP         # if(c_input == '\0')
         addi $t0, $t0, 1                # idx += 1
         j    READ_LOOP
 END_LOOP:
@@ -94,21 +94,22 @@ call:
      j readline
      
 init:
-        li  $s0, 0            # 0 = not printed, 1 = printed
+        li  $s0, 0                # 0 = not printed, 1 = printed
+        
         #init on every realine loop
-        li  $t7, 0          # the space counter
+        li  $t7, 0                # the space counter
         jr $ra
         
 readline:
 
-         lb   $t5, 0($t4)      # load char at index ($t4)
+        lb   $t5, 0($t4)          # load char at index ($t4)
         j check
         
 check:
         beq  $t5, $0, main_end    # if null finish reading the file
-        beq  $t5, 10, pAddj  # if \n, line counter +1, index pointer +1, and we read the next line 
-        beq  $t5, 32, space  # if space, check if line count == space count
-        beq  $s1, $0 , output # print the first word in the first line
+        beq  $t5, 10, pAddj       # if \n, line counter +1, index pointer +1, and we read the next line 
+        beq  $t5, 32, space       # if space, check if line count == space count
+        beq  $s1, $0 , output     # print the first word in the first line
         
         addi $t4, $t4, 1
         j readline
@@ -117,18 +118,18 @@ check:
         
 space:
     
-    addi $t7, $t7, 1        # space counter +1
+    addi $t7, $t7, 1             # space counter +1
     addi $t4, $t4, 1
     
     j output
         
 output:
-    lb   $t5, 0($t4)      # load char at index ($t4)
+    lb   $t5, 0($t4)             #load char at index ($t4)
     beq $s0, 1, pword
 
-    bne $s1, $t7, readline     # if space != line count then keep reading    
-    beq $t5, 10, cword        # handle exception
-    beq $t5, 32, pword        # handle exception
+    bne $s1, $t7, readline       # if space != line count then keep reading    
+    beq $t5, 10, cword           # handle exception
+    beq $t5, 32, pword           # handle exception
     
     li  $v0, 11
     add $a0, $0, $t5
