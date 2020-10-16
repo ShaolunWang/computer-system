@@ -123,10 +123,64 @@ END_LOOP:
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
+LOAD:
+	
+	la $s7, 0(key)        	# load key address
+	la $s8, 0(input_text)   # load input text address
+	li $t1, 0 				# pointer of the current xor byte index (key)
+	li $t2, 0               # pointer of the current xor byte index (input)
+	li $t3, 0 				# length of the key
+	
+	lb $t0, 0(s8)  			# first char of input text
+
+	jal LENGTH
+	subi $t3, $t3, 1
+
+CALL:
+	# entry
+		jal CHECK
+		jal modify
+
+lENGTH:
+	
+	lb $s0, 0(s7)           # load key, moves 1 bytes at a time
+	
+	beq $s0,$0, BACK 		# back to call
+	
+	addi $t3,$t3,1 			# t3++
+	
+
+CHECK:
+	
+	lb $s0, 0(s7)           # load key, moves 1 bytes at a time
+	lb $t0, 0(s8) 			# load input, moves 1 bytes at a time
+	
+	beq $s0, 10, END
+
+	beq $s0, 32, CHECK_BACK
+	beq $s0,  
+
+CHECK_BACK:
+
+	# a function that does the go to the next char job if \n or space
+	beq $t1, $
+	addi $t2, $t2, 1
+	j BACK 
 
 
-# You can add your code here!
+MODIFY:
 
+PRINT:
+
+BACK:
+	jr $ra
+END:
+	li $v0, 11
+	li $a0, 10
+
+	syscall
+	j main_end
+	
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
