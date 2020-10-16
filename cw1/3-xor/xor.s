@@ -138,8 +138,7 @@ LOAD:
 
 CALL:
 	# entry
-		jal CHECK
-		jal modify
+	j CHECK
 
 lENGTH:
 	
@@ -158,29 +157,44 @@ CHECK:
 	beq $s0, 10, END
 
 	beq $s0, 32, CHECK_BACK
-	beq $s0,  
+	beq $s0,
+
+	j MODIFY 
 
 CHECK_BACK:
 
 	# a function that does the go to the next char job if \n or space
-	beq $t1, $
-	addi $t2, $t2, 1
+	jal ADDN	
+	addi $t1, $t1,1 
+
 	j BACK 
 
-
 MODIFY:
-
+		
+	
 PRINT:
 
-BACK:
-	jr $ra
+
 END:
 	li $v0, 11
 	li $a0, 10
 
 	syscall
 	j main_end
-	
+
+# --------------
+# End of the xor main block, below is helper functions
+#---------------
+
+BACK:
+	jr $ra
+
+ADDN:
+	# only `li $t1 0` if $t1 == $t3
+	bne $t1,$t3, BACK
+	li $t1, 0
+	la $ra, 4($ra)
+	j BACK
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
