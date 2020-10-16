@@ -94,7 +94,6 @@ li  $t2, 10 		 # store \n here
 li  $t3, 32 		 # store space here
 add $t4, $0, $t1    # the input file index 
 
-<<<<<<< HEAD
 
 # You can add your code here!
 
@@ -124,11 +123,7 @@ PRINT:
 	syscall
 
 	addi $t3, $t3, 1
-=======
 call:
->>>>>>> 067c893faba6592018300e1202f709f748edc6b0
-	
-	
  	 jal init
  
 	 j readline
