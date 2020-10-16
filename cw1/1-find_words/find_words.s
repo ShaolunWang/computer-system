@@ -123,63 +123,7 @@ PRINT:
 	syscall
 
 	addi $t3, $t3, 1
-call:
- 	 jal init
- 
-	 j readline
-	 
-init:
-		#init on every realine loop
-		li  $t7, 0          # the space counter
-		jr $ra
-		
-readline:
 
-	 	lb   $t5, 0($t4)      # load char at index ($t4)
-		beqz $t5, printend    # if null finish reading the file
-		beq  $t5, $t2, pAddj  # if \n, line counter +1, index pointer +1, and we read the next line 
-		beq  $t5, $t3, space  # if space, check if line count == space count
-
-pAddj:
-		addi $t4, $t4, 1
-	    addi $s1, $s1, 1
-	    li      $v0, 11
-	    addi $a0, $0, 10
-		syscall
-		
-		j call
-		
-
-		
-space:
-		beq $t7, $s1, output
-		
-		addi $t7, $t7, 1	
-		jal printspace          
-		j readline					#continue reading the line
-
-output:
-			lb   $t5, 0($t4)      # load char at index ($t4)
-			
-			li  $v0, 11
-			add $a0, $0, $t5
-			syscall
-			
-			addi $t4, $t4, 1
-			beq $t5, $t3, readline
-			j space
-			
-printspace:
-			li $v0, 11, 
-			add $a0, $0, 32
-			syscall
-			jr $ra
-printend:
-	
-	li $v0, 11
-	li $a0, 10
-	syscall
-	j main_end
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
 #-----------------------------------------------------------------
