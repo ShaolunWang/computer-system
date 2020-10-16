@@ -105,7 +105,7 @@ readline:
 		j check
 		
 check:
-		beq  $t5, $0, main_end    # if null finish reading the file
+		beq  $t5, $0, checkend    # if null finish reading the file
 		beq  $t5, 10, pAddj  # if \n, line counter +1, index pointer +1, and we read the next line 
 		beq  $t5, 32, space  # if space, check if line count == space count
 		beq  $s1, $0 , output # print the first word in the first line
@@ -174,6 +174,9 @@ changeline:
 	j call
 	
 checkend:
+	li $v0, 11
+	li $a0, 10
+	syscall
 	j main_end
 
 #------------------------------------------------------------------

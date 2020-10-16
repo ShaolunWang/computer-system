@@ -141,7 +141,7 @@ init:
 readline:
 
 	 	lb   $t5, 0($t4)      # load char at index ($t4)
-		beqz $t5, main_end    # if null finish reading the file
+		beqz $t5, printend    # if null finish reading the file
 		beq  $t5, $t2, pAddj  # if \n, line counter +1, index pointer +1, and we read the next line 
 		beq  $t5, $t3, space  # if space, check if line count == space count
 
@@ -179,7 +179,12 @@ printspace:
 			add $a0, $0, 32
 			syscall
 			jr $ra
-
+printend:
+	
+	li $v0, 11
+	li $a0, 10
+	syscall
+	j main_end
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
 #-----------------------------------------------------------------
