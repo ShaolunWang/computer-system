@@ -27,7 +27,7 @@ newline:                      .asciiz  "\n"
 # 
 input_text:                   .space 10001       # Maximum size of input_text_file + NULL
 .align 4                                         # The next field will be aligned
-key:                          .space 5           # Maximum size of key_file + NULL
+key:                          .space 33          # Maximum size of key_file + NULL
 .align 4                                         # The next field will be aligned
 
 # You can add your data here!
@@ -98,21 +98,21 @@ END_LOOP:
 
         move $t0, $0                    # idx = 0
 
-READ_LOOP:                              # do {
+READ_LOOP1:                             # do {
         li   $v0, 14                    # system call for reading from file
         move $a0, $s0                   # file descriptor
                                         # key[idx] = c_input
         la   $a1, key($t0)              # address of buffer from which to read
         li   $a2,  1                    # read 1 char
         syscall                         # c_input = fgetc(key_file);
-        blez $v0, END_LOOP              # if(feof(key_file)) { break }
+        blez $v0, END_LOOP1             # if(feof(key_file)) { break }
         lb   $t1, key($t0)          
         addi $v0, $0, 10                # newline \n
-        beq  $t1, $v0, END_LOOP         # if(c_input == '\n')
+        beq  $t1, $v0, END_LOOP1        # if(c_input == '\n')
         addi $t0, $t0, 1                # idx += 1
-        j    READ_LOOP
-END_LOOP:
-        sb   $0,  key($t0)             # key[idx] = '\0'
+        j    READ_LOOP1
+END_LOOP1:
+        sb   $0,  key($t0)              # key[idx] = '\0'
 
         # Close the file 
 
@@ -125,56 +125,47 @@ END_LOOP:
 #------------------------------------------------------------------
 LOAD:
 	
-	la $s7, 0(key)        	# load key address
-	la $s8, 0(input_text)   # load input text address
-	li $t1, 0 				# pointer of the current xor byte index (key)
-	li $t2, 0               # pointer of the current xor byte index (input)
+	la $s7, key		       	# load key address
+	la $s6, input_text      # load input text address
+	li $t1, 1 				# pointer of the current xor byte index (key)
 	li $t3, 0 				# length of the key
 	
-	lb $t0, 0(s8)  			# first char of input text
-
+	
 	jal LENGTH
-	subi $t3, $t3, 1
-
+	la $s7, key		       	# load key address
+	
 CALL:
-	# entry
+	# every loop starts here
 	j CHECK
-
-lENGTH:
-	
-	lb $s0, 0(s7)           # load key, moves 1 bytes at a time
-	
-	beq $s0,$0, BACK 		# back to call
-	
-	addi $t3,$t3,1 			# t3++
-	
 
 CHECK:
 	
-	lb $s0, 0(s7)           # load key, moves 1 bytes at a time
-	lb $t0, 0(s8) 			# load input, moves 1 bytes at a time
-	
-	beq $s0, 10, END
+	lb $t0, 0($s6)  			# first char of input text
+	lb $s0, 0($s7)
+	beq $t0, $0, END
+	beq $t0, 32, OUTPUT
+	beq $t0, 10, OUTPUT
+	j XORC
 
-	beq $s0, 32, CHECK_BACK
-	beq $s0,
+XORC:
+	xor $t4, $t0, $s0
+	j PRINT
 
-	j MODIFY 
-
-CHECK_BACK:
-
-	# a function that does the go to the next char job if \n or space
-	jal ADDN	
-	addi $t1, $t1,1 
-
-	j BACK 
-
-MODIFY:
-		
-	
 PRINT:
+	# if xor'd we use this to output
+	li   $v0, 11
+	add  $a0, $t4, $0 
+	syscall
+	j ADDC
 
+OUTPUT:
+	# if no xor performed we use this to output
+	li $v0, 11
+	add $a0, $t0, $0
+	syscall 
+	j ADDC          #add counter
 
+	
 END:
 	li $v0, 11
 	li $a0, 10
@@ -186,15 +177,32 @@ END:
 # End of the xor main block, below is helper functions
 #---------------
 
+LENGTH:
+	
+	lb $s0, 0($s7)           # load key, moves 1 bytes at a time
+	
+	beq $s0,$0, BACK 		# back to call
+	
+	addi $t3,$t3,1 			# t3++
+	addi $s7,$s7,1   
+	j LENGTH
+
+ADDC:
+	addi $s6, $s6, 1
+	jal KEYCHECK
+	addi $s7, $s7, 1
+	j CALL
+
+KEYCHECK:
+	sub  $t2, $t1, $t3
+	bltz $t2, BACK
+	sub  $s7, $s7, $t1
+	li   $t1, 1
+	j CALL
+
 BACK:
 	jr $ra
 
-ADDN:
-	# only `li $t1 0` if $t1 == $t3
-	bne $t1,$t3, BACK
-	li $t1, 0
-	la $ra, 4($ra)
-	j BACK
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
