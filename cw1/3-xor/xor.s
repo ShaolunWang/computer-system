@@ -1,3 +1,4 @@
+
 #=========================================================================
 # XOR Cipher Encryption
 #=========================================================================
@@ -29,9 +30,10 @@ input_text:                   .space 10001       # Maximum size of input_text_fi
 .align 4                                         # The next field will be aligned
 key:                          .space 33          # Maximum size of key_file + NULL
 .align 4                                         # The next field will be aligned
-
+					 
 # You can add your data here!
-
+bin_out: 					  .space 33
+.align 4
 #=========================================================================
 # TEXT SEGMENT  
 #=========================================================================
@@ -50,6 +52,8 @@ main:
 
 # opening file for reading (text)
 
+# opening file for reading (text)
+
         li   $v0, 13                    # system call for open file
         la   $a0, input_text_file_name  # input_text file name
         li   $a1, 0                     # flag for reading
@@ -62,7 +66,8 @@ main:
 
         move $t0, $0                    # idx = 0
 
-READ_LOOP:                              # do {
+READ_LOOP:           
+                   # do {
         li   $v0, 14                    # system call for reading from file
         move $a0, $s0                   # file descriptor
                                         # input_text[idx] = c_input
@@ -120,6 +125,7 @@ END_LOOP1:
         move $a0, $s0                   # file descriptor to close
         syscall                         # fclose(key_file)
 
+
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
@@ -127,28 +133,32 @@ LOAD:
 	
 	la $s7, key		       	# load key address
 	la $s6, input_text      # load input text address
-	li $t1, 1 				# pointer of the current xor byte index (key)
 	li $t3, 0 				# length of the key
-	
-	
-	jal LENGTH
+
+	jal CTB
 	la $s7, key		       	# load key address
+	jal LENGTH
+	
+	add $s4, $0, $t7
 	
 CALL:
 	# every loop starts here
 	j CHECK
 
 CHECK:
-	
 	lb $t0, 0($s6)  			# first char of input text
-	lb $s0, 0($s7)
+	sub  $t6, $t7, $s4
+	sllv $t4, $t5, $t6
+	subi  $s4, $s4, 8
+	srlv $t4, $t5, $s4
+	
 	beq $t0, $0, END
 	beq $t0, 32, OUTPUT
 	beq $t0, 10, OUTPUT
 	j XORC
-
+	
 XORC:
-	xor $t4, $t0, $s0
+	xor $t4, $t4, $t0
 	j PRINT
 
 PRINT:
@@ -168,6 +178,7 @@ OUTPUT:
 	
 END:
 	li $v0, 11
+	beq $a0, 10 main_end
 	li $a0, 10
 
 	syscall
@@ -177,27 +188,42 @@ END:
 # End of the xor main block, below is helper functions
 #---------------
 
+CTB:
+	#checked, correct
+  	lb  $s0, 0($s7)
+	beq $s0, $0, BACK	# if key end we back
+	sll $t5, $t5, 1
+	sub $s0, $s0, 48
+	add $t5, $t5, $s0 		# bin key stored in $t5
+	
+	addi $s7,$s7, 1
+	
+	j CTB
+	
 LENGTH:
 	
-	lb $s0, 0($s7)           # load key, moves 1 bytes at a time
+	lb $s5, 0($s7)
 	
-	beq $s0,$0, BACK 		# back to call
-	
-	addi $t3,$t3,1 			# t3++
-	addi $s7,$s7,1   
+	beq $s5, $0, LENGTHDIV
+	addi $t3,$t3,1
+	addi $s7,$s7,1
 	j LENGTH
+
+LENGTHDIV:
+	add $t7, $0, $t3
+	li $t1, 4
+	divu $t3, $t3, 8
+	j BACK
 
 ADDC:
 	addi $s6, $s6, 1
 	jal KEYCHECK
-	addi $s7, $s7, 1
 	j CALL
 
 KEYCHECK:
-	sub  $t2, $t1, $t3
-	bltz $t2, BACK
-	sub  $s7, $s7, $t1
-	li   $t1, 1
+	
+	bgtz $s4, BACK
+	add $s4, $0,$t7
 	j CALL
 
 BACK:
