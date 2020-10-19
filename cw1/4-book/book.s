@@ -98,19 +98,19 @@ END_LOOP:
 
         move $t0, $0                    # idx = 0
 
-READ_LOOP:                              # do {
+READ_LOOP1:                             # do {
         li   $v0, 14                    # system call for reading from file
         move $a0, $s0                   # file descriptor
                                         # book[idx] = c_input
-        la   $a1, book($t0)              # address of buffer from which to read
+        la   $a1, book($t0)             # address of buffer from which to read
         li   $a2,  1                    # read 1 char
         syscall                         # c_input = fgetc(book_file);
-        blez $v0, END_LOOP              # if(feof(book_file)) { break }
+        blez $v0, END_LOOP1             # if(feof(book_file)) { break }
         lb   $t1, book($t0)          
-        beq  $t1, $0,  END_LOOP        # if(c_input == '\0')
+        beq  $t1, $0,  END_LOOP1        # if(c_input == '\0')
         addi $t0, $t0, 1                # idx += 1
-        j    READ_LOOP
-END_LOOP:
+        j    READ_LOOP1
+END_LOOP1:
         sb   $0,  book($t0)             # book[idx] = '\0'
 
         # Close the file 
@@ -118,18 +118,172 @@ END_LOOP:
         li   $v0, 16                    # system call for close file
         move $a0, $s0                   # file descriptor to close
         syscall                         # fclose(book_file)
+                    # fclose(book_file)
 
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
+#initialize some stuffs (globally)
+
+la  $t1, book       # book address in $t1
+la  $t2, input_text
 
 
-# You can add your code here!
+# -------------------------
+# this part would be getting the input 
+# -------------------------
 
+start:
+	la  $t1, book       # book address in $t1
+	# the start of the input read
+	li  $s1, 1          # the line counter
+	li $s2, 0
+	li $s3, 0
+	lb $s5, 0($t2)
+	beq $s5, $0, checkend
+	
+	j getline
+	
+getline:
+
+	lb  $s5, 0($t2)
+	beq $s5, 32, getpos
+	beq $s5, $0, checkend
+	sll $s2, $s2,4
+	subi $s5, $s5, 48
+	or $s2, $s5, $s2
+	addi $t2, $t2, 1
+	
+	j getline
+	
+getpos:
+	
+	addi $t2, $t2, 1
+	lb  $s5, 0($t2)
+	beq $s5, $0, checkend
+	beq $s5, 10, go
+	sll $s3, $s3, 4
+	subi $s5, $s5, 48
+	or $s3, $s3, $s5
+	
+	j getpos
+
+back:
+	jr $ra
+
+
+go:
+	addi $t2, $t2, 1
+	
+call:
+	  li  $s1, 1          # the line counter
+      jal init
+      j read
+     
+init:
+        li $s6, 0
+        #init on every realine loop
+        li  $t7, 1               # the space counter
+        jr $ra
+        
+read:
+        lb   $t5, 0($t1)            # load char at index ($t1)
+        beq  $t5, $0, start
+        beq  $t5, 10, printEnd       # a check for endl
+        beq  $t5, 32, check		    # a normal check
+       
+        addi $t1, $t1, 1
+        j read
+        
+check: 
+		beq  $s1, $s2, output     # if line count equal we output	
+		addi $t7, $t7, 1	
+		addi $t1, $t1, 1
+		j read
+		
+output:
+		# the output branch
+		addi $t7, $t7, 1
+		addi $t1, $t1, 1
+		lb   $t5, 0($t1)
+		
+	    sub $t6, $t7, $t3
+        blt  $t6, $0, changeline
+		
+		
+		beq $s3, $t7, print
+		j read
+		
+		
+print:
+		beq $t5, 10, cword           # handle exception
+    	beq $t5, 32, cword
+    	
+		
+		li $v0, 11
+		add $a0, $t5, $0
+		syscall
+		
+		addi $t1, $t1, 1
+		lb   $t5, 0($t1)
+		
+		beq $t5, 32, afterRead
+		beq $t5, 0,  afterRead
+		j print
+		
+		
+		
+		j read
+		
+afterRead:
+		li $v0, 11
+		li $a0, 32
+		syscall
+		addi $t7, $t7, 1
+		addi $t1, $t1, 1
+		j read				
+
+cword:
+    li $v0, 11
+    li $a0, 32
+    syscall
+    
+    j read
+
+
+printEnd:
+		bne $s2, $s1, endadd
+	    sub $t6, $t7, $s3
+        blt $t6, $0, changeline
+        j endadd
+        
+changeline:		
+		li $v0, 11
+		li $a0, 10
+		syscall
+		
+		j endadd
+
+
+
+
+endadd:
+	addi $s1, $s1, 1
+	addi $t1, $t1, 1
+	li $t7, 1
+	j read
+
+checkend:
+	
+	li $v0, 11
+	li $a0, 10
+	syscall
+	j main_end
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
 #------------------------------------------------------------------
+
 main_end:      
         li   $v0, 10          # exit()
         syscall
