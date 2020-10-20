@@ -88,17 +88,6 @@ END_LOOP:
 #------------------------------------------------------------------
 
 
-li  $s1, 0          # the line counter
-la  $t1, input_text # input text address in $t1
-li  $t2, 10 		 # store \n here
-li  $t3, 32 		 # store space here
-add $t4, $0, $t1    # the input file index 
-
-
-# You can add your code here!
-
-# What do I know: 		Everything is stored in the input_text
-# What do I need to do: process every char and check whether it's a space
 
 LOAD:
 	
@@ -114,7 +103,7 @@ CHECK:
 	j PRINT
 	
 MODIFY:
-	li $s0, 10 
+	la $s0, 10 
 	j PRINT
 
 PRINT:
@@ -123,6 +112,13 @@ PRINT:
 	syscall
 
 	addi $t3, $t3, 1
+	
+	
+	 
+	j CHECK
+
+#------------------------------------------------------------------
+# Exit, DO NOT MODIFY THIS BLOCK
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
