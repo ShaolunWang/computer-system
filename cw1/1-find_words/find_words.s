@@ -1,7 +1,7 @@
 #=========================================================================
-# Steganography
+# Word Finder 
 #=========================================================================
-# Retrive a secret message from a given text.
+# Finds words in a given text.
 # 
 # Inf2C Computer Systems
 # 
@@ -17,7 +17,7 @@
 # Constant strings
 #-------------------------------------------------------------------------
 
-input_text_file_name:         .asciiz  "input_steg.txt"
+input_text_file_name:         .asciiz  "input_words.txt"
 newline:                      .asciiz  "\n"
         
 #-------------------------------------------------------------------------
@@ -35,8 +35,6 @@ input_text:                   .space 10001       # Maximum size of input_text_fi
 .text
 
 #-------------------------------------------------------------------------
-
-
 # MAIN code block
 #-------------------------------------------------------------------------
 
@@ -88,6 +86,10 @@ END_LOOP:
 #------------------------------------------------------------------
 
 
+# You can add your code here!
+
+# What do I know: 		Everything is stored in the input_text
+# What do I need to do: process every char and check whether it's a space
 
 LOAD:
 	

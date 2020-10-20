@@ -127,7 +127,7 @@ END_LOOP1:
 
 la  $t1, book       # book address in $t1
 la  $t2, input_text
-
+li  $t0, 0
 
 # -------------------------
 # this part would be getting the input 
@@ -147,6 +147,7 @@ start:
 getline:
 
 	lb  $s5, 0($t2)
+	
 	beq $s5, 32, getpos
 	beq $s5, $0, checkend
 	sll $s2, $s2,4
@@ -174,6 +175,11 @@ back:
 
 go:
 	addi $t2, $t2, 1
+
+	beq $s4, $0, lastline
+	j call
+lastline:
+	li $t0, 1
 	
 call:
 	  li  $s1, 1          # the line counter
@@ -238,10 +244,20 @@ print:
 afterRead:
 		li $v0, 11
 		li $a0, 32
+
 		syscall
 		addi $t7, $t7, 1
 		addi $t1, $t1, 1
 		j read				
+
+endprint:
+		li $v0, 11
+		li $a0, 32
+		syscall
+		
+				addi $t7, $t7, 1
+		addi $t1, $t1, 1
+		j read		
 
 cword:
     li $v0, 11
