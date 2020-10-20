@@ -128,7 +128,7 @@ END_LOOP1:
 la  $t1, book       # book address in $t1
 la  $t2, input_text
 li  $t0, 0
-
+li  $s0, 0
 # -------------------------
 # this part would be getting the input 
 # -------------------------
@@ -175,7 +175,7 @@ back:
 
 go:
 	addi $t2, $t2, 1
-
+	addi $s0, $s0, 1
 	beq $s4, $0, lastline
 	j call
 lastline:
@@ -217,9 +217,16 @@ output:
         blt  $t6, $0, changeline
 		
 		
-		beq $s3, $t7, print
+		beq $s3, $t7, beforeRead
 		j read
-		
+
+beforeRead:
+	beq $a0, 32, print
+	beq $s0, 1, print
+	beq $a0, 10, print
+	li $v0, 11
+    li $a0, 32
+    syscall			
 		
 print:
 		beq $t5, 10, cword           # handle exception
@@ -237,29 +244,19 @@ print:
 		beq $t5, 0,  afterRead
 		j print
 		
+		j read		
 		
-		
-		j read
 		
 afterRead:
-		li $v0, 11
-		li $a0, 32
-
-		syscall
 		addi $t7, $t7, 1
 		addi $t1, $t1, 1
 		j read				
 
-endprint:
-		li $v0, 11
-		li $a0, 32
-		syscall
-		
-				addi $t7, $t7, 1
-		addi $t1, $t1, 1
-		j read		
-
 cword:
+	
+	lb $s5, 1($t2)
+	beq $s5, $0, read
+	
     li $v0, 11
     li $a0, 32
     syscall
@@ -279,9 +276,6 @@ changeline:
 		syscall
 		
 		j endadd
-
-
-
 
 endadd:
 	addi $s1, $s1, 1
