@@ -120,12 +120,127 @@ END_LOOP1:
         move $a0, $s0                   # file descriptor to close
         syscall                         # fclose(key_file)
 
+
+
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
+li $s0, 0 								
+li $t7, 0
+li $t0, 0 								# key
+li $s3, 0 								# number of tries
 
 
-# You can add your code here!
+init:
+	
+	la $s1, hint
+	la $s2, input_text
+	jal xorinit
+	j call
+
+xorinit:
+	sll $t0, $t0, 1
+	addi $t0, $t0, 1
+	jr $ra
+call:
+	j xorcrack
+	
+	# to check if they matches, we iterate through the input string(xored)
+	# so double loop should be implemented 
+	
+xorcrack:
+
+	lb $t1, 0($s1) 						# hint char
+	lb $t2, 0($s2)   					# input char
+	beq $t2, $0, endloop
+	beq $t1, 32, skip
+	xor $t4, $t2, $t0					# xor 
+checkmatch:
+	beq $t4, $t1,nextloop
+	li  $t7, 0	
+	addi $s2, $s2, 1
+	j xorcrack				# loop if matches 
+nextloop:
+	# counters ++ and we go to the next loop
+	addi $s2, $s2, 1
+	addi $s1, $s1, 1
+	li $t7, 1	
+	j xorcrack 
+skip:
+	addi $s2,$s2, 1
+	addi $s1,$s1, 1
+	j xorcrack
+	
+#	addi $
+endloop:
+	# check if it's 1111 1111
+	bne $t0, 255, init 
+	li $v0, 11
+	li $a0, 45
+	syscall 
+	li $a0, 49
+	syscall
+	j end
+
+
+printXor:
+	
+	srl $t5, $t0, 4 # first 4 bits
+	
+	sll $s0, $t5, 0
+	srl	$s0, $t5, 3 # first bit
+	jal print
+
+	sll $s0, $t5, 1
+	srl $s0, $s0, 3 #second bit
+	jal print
+
+	sll $s0, $t5, 2
+	srl $s0, $s0, 3 # 3rd bit
+	jal print
+
+	sll $s0, $t5, 3
+	srl $s0, $s0, 3 # 4th bit
+	jal print
+
+	srl $t5, $t0, 4 
+	sll $t5, $t5, 4 # reload next 4 bits
+
+	sll $s0, $t5, 0
+	srl	$s0, $s0, 3 # 1st bit
+	jal print
+
+
+	sll $s0, $t5, 1
+	srl $s0, $s0, 3 # 2nd bit
+	jal print
+
+	sll $s0, $t5, 2
+	sll $s0, $s0, 3 # 3rd bit
+	jal print
+
+	sll $s0, $t5, 3
+	srl $s0, $s0, 3 # 4th bit
+	jal print
+
+
+	j end	
+
+print:
+	li $v0, 11
+	
+	addi $a0, $s0, 48
+	syscall
+	jr $ra
+
+end:
+	beq $t7, 1,  printXor
+	beq $a0, 10, main_end
+	li $v0, 11
+	li $a0, 10
+
+	syscall
+	j main_end
 
 
 #------------------------------------------------------------------
@@ -138,3 +253,11 @@ main_end:
 #----------------------------------------------------------------
 # END OF CODE
 #----------------------------------------------------------------
+
+
+
+	
+
+	
+
+
