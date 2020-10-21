@@ -98,7 +98,7 @@ LOAD:
 	j CHECK 						# jump
 
 CHECK:
-	blez $s0, main_end
+	blez $s0, END
 	lb $s0, 0($t3)						#end if no char
 	li  $t1, 32 		   			# ascii value for space in $t1
 	beq $t1, $s0, MODIFY 			# current char stored in $s1
@@ -114,10 +114,16 @@ PRINT:
 	syscall
 
 	addi $t3, $t3, 1
-	
-	
-	 
+
 	j CHECK
+END:
+	beq $a0, 10, main_end
+	li $v0, 11
+	la $a0, 10
+	
+	syscall
+	
+	j main_end
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK
