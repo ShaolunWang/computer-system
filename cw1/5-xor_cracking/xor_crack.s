@@ -153,8 +153,9 @@ xorcrack:
 	lb $t2, 0($s2)   					# input char
 	beq $t1, $0, endloop
 	beq $t2, $0, endloop
-	beq $t1, 32, skip
 	xor $t4, $t2, $t0					# xor 
+	beq $t1, 32, skip
+
 	
 checkmatch:
 	beq $t4, $t1,nextloop
@@ -168,6 +169,8 @@ nextloop:
 	li $t7, 1	
 	j xorcrack 
 skip:
+    beq $t1, $t2, nextloop
+    li $t7, 0
 	addi $s2,$s2, 1
 	addi $s1,$s1, 1
 	j xorcrack
