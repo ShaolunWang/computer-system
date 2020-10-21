@@ -90,7 +90,7 @@ END_LOOP:
 
 # What do I know: 		Everything is stored in the input_text
 # What do I need to do: process every char and check whether it's a space
-
+li  $t1, 32 		   		             	# ascii value for space in $t1
 LOAD:
 	
 	la $t3, input_text				 				# get address of the input text
@@ -98,9 +98,10 @@ LOAD:
 	j CHECK 						# jump
 
 CHECK:
-	blez $s0, END
-	lb $s0, 0($t3)						#end if no char
-	li  $t1, 32 		   			# ascii value for space in $t1
+	lb $s0, 0($t3)					    	
+	beq $s0, $0, END				#end if no char
+
+
 	beq $t1, $s0, MODIFY 			# current char stored in $s1
 	j PRINT
 	
