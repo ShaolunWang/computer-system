@@ -139,7 +139,6 @@ init:
 	j call
 
 xorinit:
-	sll $t0, $t0, 1
 	addi $t0, $t0, 1
 	jr $ra
 call:
@@ -152,9 +151,11 @@ xorcrack:
 
 	lb $t1, 0($s1) 						# hint char
 	lb $t2, 0($s2)   					# input char
+	beq $t1, $0, endloop
 	beq $t2, $0, endloop
 	beq $t1, 32, skip
 	xor $t4, $t2, $t0					# xor 
+	
 checkmatch:
 	beq $t4, $t1,nextloop
 	li  $t7, 0	
@@ -174,6 +175,7 @@ skip:
 #	addi $
 endloop:
 	# check if it's 1111 1111
+	beq $t7, 1, printXor
 	bne $t0, 255, init 
 	li $v0, 11
 	li $a0, 45
@@ -185,44 +187,51 @@ endloop:
 
 printXor:
 	
-	srl $t5, $t0, 4 # first 4 bits
 	
-	sll $s0, $t5, 0
-	srl	$s0, $t5, 3 # first bit
-	jal print
 
-	sll $s0, $t5, 1
-	srl $s0, $s0, 3 #second bit
-	jal print
 
-	sll $s0, $t5, 2
-	srl $s0, $s0, 3 # 3rd bit
-	jal print
-
-	sll $s0, $t5, 3
-	srl $s0, $s0, 3 # 4th bit
-	jal print
-
-	srl $t5, $t0, 4 
-	sll $t5, $t5, 4 # reload next 4 bits
-
-	sll $s0, $t5, 0
-	srl	$s0, $s0, 3 # 1st bit
+	and $s0, $t0, 128
+	srl $s0, $s0, 7
 	jal print
 
 
-	sll $s0, $t5, 1
-	srl $s0, $s0, 3 # 2nd bit
+	and $s0, $t0, 64
+	sll $s0, $s0, 1
+	srl $s0, $s0, 7
 	jal print
 
-	sll $s0, $t5, 2
-	sll $s0, $s0, 3 # 3rd bit
+	and $s0, $t0, 32
+	sll $s0, $s0, 2
+	srl $s0, $s0, 7
 	jal print
 
-	sll $s0, $t5, 3
-	srl $s0, $s0, 3 # 4th bit
+
+
+	and $s0, $t0, 16
+	sll $s0, $s0, 3
+	srl $s0, $s0, 7
 	jal print
 
+
+	and $s0, $t0, 8
+	sll $s0, $s0, 4
+	srl $s0, $s0, 7
+	jal print
+
+	and $s0, $t0, 4
+	sll $s0, $s0, 5
+	srl $s0, $s0, 7
+	jal print
+
+	and $s0, $t0, 2
+	sll $s0, $s0, 6
+	srl $s0, $s0, 7
+	jal print
+
+	and $s0, $t0, 1
+	sll $s0, $s0, 7
+	srl $s0, $s0, 7
+	jal print
 
 	j end	
 
@@ -234,7 +243,7 @@ print:
 	jr $ra
 
 end:
-	beq $t7, 1,  printXor
+
 	beq $a0, 10, main_end
 	li $v0, 11
 	li $a0, 10
