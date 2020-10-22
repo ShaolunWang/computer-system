@@ -17,11 +17,6 @@ The scoreboard is anonymous and you will receive an email with your scoreboard a
 
 # Setup #
 
-## Register your student id and name
-
-First, we need you fill out [this google form](https://docs.google.com/forms/d/e/1FAIpQLSelKOz1yZZKaqFSd67Lq6i2KoHFGYd1BnyPWGGBue4ar4DylQ/viewform?usp=sf_link)
-to help us register you for the automarking. If you are not registered, we won't be able to mark you. Also please make sure to keep `inf2c-cs-20` as your repository name, otherwise marking will fail.
-
 ## GitLab ##
 It's mandatory to use GitLab for the coursework which is a DevOps platform based around the git revision control system. The university provides GitLab to all students. Use your univeristy id number (sXXXXXXX) for your username with your EASE password.
 
@@ -32,7 +27,7 @@ It's mandatory to use GitLab for the coursework which is a DevOps platform based
 We will be using the Git revision control system during the course. Git is installed on DICE machines and if you use your own machine then you may need to install Git.
 
 You will need to have your own copy of the `inf2c-cs-20` repository. In order to fork this repository, click the fork button and follow the instructions below.
-
+Please make sure to keep `inf2c-cs-20` as your repository name, otherwise marking will fail.
 
 
 ![Forking the inf2c-cs-20 repository](./figures/gl_fork1.png "Forking this repository.")
