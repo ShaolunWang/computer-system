@@ -2,16 +2,18 @@
 
 Please note that the description of the course work might be updated from time to time to clarify things or fix mistakes.
 
-# Scoreboard #
-We will automatically run a series of hidden test inputs with your programs about twice a day. The scoreboard is provided as a best effort service, do not rely on it as it may come down unexpectedly: no guarantees are offered. 
-
-[link to scoreboard be added soon]
-
 
 # Marking #
 
-The marking will be done using an automated script on a DICE machine using Java 8 (1.8 runtime). The marking will be a function of the number of successful tests that pass.
+The marking will be done using an automated script on a Linux DICE machine using Java 8 (1.8 runtime). The marking will be a function of the number of successful tests that pass.
 
+
+# Scoreboard #
+We will automatically run a series of test inputs with your programs about twice a day and update a scoreboard with the results. The scoreboard is provided as a best effort service, do not rely on it as it may come down unexpectedly: no guarantees are offered.  
+
+The scoreboard will help you to verify your programs are working correctly on DICE and resolve any issues before the final submission.
+
+The scoreboard is anonymous and you will receive an email with your scoreboard alias [all aliases have been emailed to the class at this point in time].
 
 # Setup #
 
