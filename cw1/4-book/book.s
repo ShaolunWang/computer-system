@@ -123,172 +123,159 @@ END_LOOP1:
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
-#initialize some stuffs (globally)
 
-la  $t1, book       # book address in $t1
 la  $t2, input_text
 li  $t0, 0
-li  $s0, 0
+li  $t7, 0
 # -------------------------
 # this part would be getting the input 
 # -------------------------
 
 start:
+	
 	la  $t1, book       # book address in $t1
 	# the start of the input read
 	li  $s1, 1          # the line counter
 	li $s2, 0
 	li $s3, 0
 	lb $s5, 0($t2)
-	beq $s5, $0, checkend
-	
+	beq $s5, $0, endexec
+
 	j getline
 	
 getline:
 
-	lb  $s5, 0($t2)
+	lb   $s5, 0($t2)
 	
-	beq $s5, 32, getpos
-	beq $s5, $0, checkend
-	sll $s2, $s2,4
+	beq  $s5, 32, getpos
+	beq  $s5, $0, endexec
+	
 	subi $s5, $s5, 48
-	or $s2, $s5, $s2
-	addi $t2, $t2, 1
+	 
+	sll  $t6, $s2, 1			#
+ 	sll  $t5, $s2, 3			#   $s2 * 10
+ 	add  $s2, $t6, $t5		#
 	
+	add  $s2, $s2, $s5
+	
+	addi $t2, $t2, 1
 	j getline
 	
 getpos:
 	
 	addi $t2, $t2, 1
 	lb  $s5, 0($t2)
-	beq $s5, $0, checkend
+	beq $s5, $0, endexec
 	beq $s5, 10, go
-	sll $s3, $s3, 4
+	
 	subi $s5, $s5, 48
-	or $s3, $s3, $s5
+	
+	sll $t6, $s3, 1
+	sll $t5, $s3, 3
+	add $s3, $t6,$t5
+	
+	add $s3, $s5, $s3
 	
 	j getpos
 
 back:
 	jr $ra
 
-
 go:
 	addi $t2, $t2, 1
-	addi $s0, $s0, 1
-	beq $s4, $0, lastline
-	j call
-lastline:
-	li $t0, 1
+	li $s0, 1 # line counter
+	li $t4, 1 # space counter
 	
-call:
-	  li  $s1, 1          # the line counter
-      jal init
-      j read
-     
-init:
-        li $s6, 0
-        #init on every realine loop
-        li  $t7, 1               # the space counter
-        jr $ra
-        
-read:
-        lb   $t5, 0($t1)            # load char at index ($t1)
-        beq  $t5, $0, start
-        beq  $t5, 10, printEnd       # a check for endl
-        beq  $t5, 32, check		    # a normal check
-       
-        addi $t1, $t1, 1
-        j read
-        
-check: 
-		beq  $s1, $s2, output     # if line count equal we output	
-		addi $t7, $t7, 1	
-		addi $t1, $t1, 1
-		j read
-		
-output:
-		# the output branch
-		addi $t7, $t7, 1
-		addi $t1, $t1, 1
-		lb   $t5, 0($t1)
-		
-	    sub $t6, $t7, $t3
-        blt  $t6, $0, changeline
-		
-		
-		beq $s3, $t7, beforeRead
-		j read
-
-beforeRead:
-	beq $a0, 32, print
-	beq $s0, 1, print
-	beq $a0, 10, print
-	li $v0, 11
-    li $a0, 32
-    syscall			
-		
-print:
-		beq $t5, 10, cword           # handle exception
-    	beq $t5, 32, cword
-    	
-		
-		li $v0, 11
-		add $a0, $t5, $0
-		syscall
-		
-		addi $t1, $t1, 1
-		lb   $t5, 0($t1)
-		
-		beq $t5, 32, afterRead
-		beq $t5, 0,  afterRead
-		j print
-		
-		j read		
-		
-		
-afterRead:
-		addi $t7, $t7, 1
-		addi $t1, $t1, 1
-		j read				
-
-cword:
+readbook:
+	lb  $t3, 0($t1)
+	jal checkCounter
+	beq $s2, $s0, checkSpaceEqual
 	
-	lb $s5, 1($t2)
-	beq $s5, $0, read
-	
-    li $v0, 11
-    li $a0, 32
-    syscall
-    
-    j read
-
-
-printEnd:
-		bne $s2, $s1, endadd
-	    sub $t6, $t7, $s3
-        blt $t6, $0, changeline
-        j endadd
-        
-changeline:		
-		li $v0, 11
-		li $a0, 10
-		syscall
-		
-		j endadd
-
-endadd:
-	addi $s1, $s1, 1
 	addi $t1, $t1, 1
-	li $t7, 1
-	j read
-
-checkend:
+	j readbook
 	
+checkSpaceEqual:
+	sub $t5, $t4, $s3
+	beq $t5, $0, beforeoutput
+	addi $t1, $t1, 1
+	j readbook
+
+beforeoutput:
+	bne $t7, 0, printspace
+	j output
+	
+printspace:
+	li $v0, 11
+	li $a0, 32
+	syscall
+	li $t7, 1
+
+output:
+	addi $t1, $t1, 1
+	lb  $t3, 0($t1)
+	
+	beq $t3, 32, endOutput
+	beq $t3, 10, endOutput
+	beq $t3, $0, endOutput
+	
+	j print
+
+print:
+	li $v0, 11
+	add $a0, $0,$t3
+	syscall
+	j output
+
+
+beforeOutput_ten_Endfile:
+	beq $s2, $s0, output_ten
+	j start
+beforeOutput_ten_Endline:
+	beq $s2, $s0, output_ten
+	j checkEndline
+output_ten:
+
+	addi $t1, $t1, 1
+	li $t7, 0
+	li $v0, 11
+	li $a0, 10
+	syscall
+	
+	addi $t1, $t1, 1
+	
+endOutput_ten:
+	li $t7, 0
+	j start
+	
+endOutput:
+ 	li $t7, 1
+	j start 
+	
+checkCounter:
+	beq $t3, $0, beforeOutput_ten_Endfile
+	beq $t3, 10, beforeOutput_ten_Endline
+checkEndline:
+	beq $t3, 10, addendline
+checkSpace:
+	beq $t3, 32, addSpace
+	
+	j back
+	
+addendline:
+	addi $s0, $s0, 1
+	li $t4, 1
+	j back
+addSpace:
+	addi $t4, $t4, 1
+	j back
+
+endexec:
 	li $v0, 11
 	li $a0, 10
 	syscall
 	j main_end
+
+
 
 #------------------------------------------------------------------
 # Exit, DO NOT MODIFY THIS BLOCK

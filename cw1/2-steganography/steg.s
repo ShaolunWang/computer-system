@@ -83,97 +83,84 @@ END_LOOP:
 #------------------------------------------------------------------
 # End of reading file block.
 #------------------------------------------------------------------
+la  $t2, input_text
+li  $t7, 0
+li  $t0, 0
+# -------------------------
+# this part would be getting the input 
+# -------------------------
+	la $t1, input_text
 
 
-li  $s1, 0          # the line counter
-la  $t1, input_text # input text address in $t1
-add $t4, $0, $t1    # the input file index 
+go:
+	li $s3, 1 # line counter
+	li $t4, 1 # space counter
 
-call:
-      jal init
-     j readline
-     
-init:
-        li  $s0, 0                # 0 = not printed, 1 = printed
-        
-        #init on every realine loop
-        li  $t7, 0                # the space counter
-        jr $ra
-        
-readline:
+read:
+ 	lb $t3, 0($t1)
+ 	beq $s3, $t4, beforeOutput
+ 	beq $t3, 10, checkEndline
+	beq $t3, 32, addSpace
+	beq $t3, $0, endexec
+	addi $t1, $t1, 1
+	j read
+beforeOutput:
 
-        lb   $t5, 0($t4)          # load char at index ($t4)
-        j check
-        
-check:
-		beq  $t5, $0, checkend    # if null finish reading the file
-		beq  $t5, 10, pAddj  # if \n, line counter +1, index pointer +1, and we read the next line 
-		beq  $t5, 32, space  # if space, check if line count == space count
-		beq  $s1, $0 , output # print the first word in the first line
-		
-		addi $t4, $t4, 1
-		j readline
+	bne $t7, 0, printspace
+	j output
 
-        
-space:
-    
-    addi $t7, $t7, 1             # space counter +1
-    addi $t4, $t4, 1
-    
-    j output
-        
+printspace:
+	li $v0, 11
+	li $a0, 32
+	syscall
+	li $t7, 1
+
 output:
-    lb   $t5, 0($t4)             #load char at index ($t4)
-    beq $s0, 1, pword
+	lb $t3, 0($t1)
+	beq $t3, 32, endOutput
+	beq $t3, 10, endOutput
+	beq $t3, $0, endexec	
+	addi $t1, $t1, 1
+	j print
+	
+print:
+	li $v0, 11
+	add $a0, $0,$t3
+	syscall
+	j output
+	
+endOutput:
+ 	li $t7, 1
+ 	li $t0, 1
+ 	beq $t3, 10, addEndline
+ 	beq $t3, 32, addSpace
+ 	addi $t1, $t1, 1
+	j read 
 
-    bne $s1, $t7, readline       # if space != line count then keep reading    
-    beq $t5, 10, cword           # handle exception
-    beq $t5, 32, pword           # handle exception
-    
-    li  $v0, 11
-    add $a0, $0, $t5
-    syscall
-    addi $t4, $t4, 1
-    j output
 
-pword:
-    li $s0, 1
-    addi $t4, $t4, 1
-    j check
-cword:
-    li $v0, 11
-    li $a0, 10
-    syscall
-    
-    j call
+checkEndline:
+	beq $t0, 1, addEndline
+	li $v0, 11
+	li $a0, 10
+	li $t7, 0
+	syscall
+	j addEndline
 
-pAddj:
-        
-        # I didn't call output here
-        addi $t4, $t4, 1
-        addi $s1, $s1, 1
-        beq  $a0, 32, call
-        beq  $a0, 10, call  
-        
-        lb $s3, 1($t4)
-        beq $s3, $0, checkend
-        
-        sub $t6, $t7, $s1
-        blt $t6, $0, changeline
-        
-        li   $v0, 11
-        addi $a0, $0, 32
-        syscall
-        
-        j call
-        
-changeline:
-    li   $v0, 11
-    addi $a0, $0, 32
-    syscall
-    j call
-    
-checkend:
+
+addEndline:
+	addi $s3, $s3, 1
+	li $t4, 1
+	li $t0, 0
+	addi $t1, $t1, 1
+	j read
+	
+addSpace:
+	addi $t4, $t4, 1
+	addi $t1, $t1, 1
+	j read
+
+endexec:
+
 	li $v0, 11
 	li $a0, 10
 	syscall
