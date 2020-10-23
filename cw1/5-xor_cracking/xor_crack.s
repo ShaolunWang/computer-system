@@ -157,6 +157,7 @@ xorcrack:
 	
 	beq $s5, 0,  checkmatch
 	beq $t1, 32, skip
+	beq $t1, 10, skip
 	beq $t2, 32, checkInit
 	beq $t2, 10, checkInit
 	
@@ -197,6 +198,8 @@ skip:
 endloop:
 	# check if it's 1111 1111
 	beq $t7, 1, printXor
+	
+endloop1:
 	bne $t0, 255, init 
 	li $v0, 11
 	li $a0, 45
@@ -207,7 +210,10 @@ endloop:
 
 
 printXor:
-
+	
+	lb  $s6, 1($s1)
+	bgt $s6, 32, endloop1
+	
 	and $s0, $t0, 128
 	srl $s0, $s0, 7
 	jal print
