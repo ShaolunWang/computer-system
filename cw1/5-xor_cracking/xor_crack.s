@@ -132,14 +132,15 @@ li $s3, 0 								# number of tries
 
 
 init:
-	
+	li $s5, 0                           # start of the file
 	la $s1, hint
 	la $s2, input_text
 	jal xorinit
 	j call
-
+	
 xorinit:
-	addi $t0, $t0, 1
+	add $t0, $t0, $t6
+	li $t6, 1
 	jr $ra
 call:
 	j xorcrack
@@ -148,34 +149,51 @@ call:
 	# so double loop should be implemented 
 	
 xorcrack:
-
 	lb $t1, 0($s1) 						# hint char
 	lb $t2, 0($s2)   					# input char
 	beq $t1, $0, endloop
 	beq $t2, $0, endloop
 	xor $t4, $t2, $t0					# xor 
-	beq $t1, 32, skip
-
 	
+	beq $s5, 0,  checkmatch
+	beq $t1, 32, skip
+	beq $t2, 32, checkInit
+	beq $t2, 10, checkInit
+	
+	addi $s2, $s2, 1
+	j xorcrack
+checkInit:
+	addi $s2, $s2, 1
+	li $s5, 0
+	
+	j xorcrack
 checkmatch:
+	li $s5, 1
+	beq $t1, 32, skip
 	beq $t4, $t1,nextloop
 	li  $t7, 0	
 	addi $s2, $s2, 1
+	la $s1, hint
+
 	j xorcrack				# loop if matches 
+	
 nextloop:
 	# counters ++ and we go to the next loop
 	addi $s2, $s2, 1
 	addi $s1, $s1, 1
 	li $t7, 1	
-	j xorcrack 
-skip:
-    beq $t1, $t2, nextloop
-    li $t7, 0
-	addi $s2,$s2, 1
-	addi $s1,$s1, 1
+	li $s5, 0
 	j xorcrack
 	
-#	addi $
+skip:
+    beq $t2, 32, nextloop
+    beq $t2, 10, nextloop
+    li $s5, 0
+    li $t7, 0
+	addi $s2,$s2, 1
+    la $s1, hint
+	j xorcrack
+
 endloop:
 	# check if it's 1111 1111
 	beq $t7, 1, printXor
@@ -189,9 +207,6 @@ endloop:
 
 
 printXor:
-	
-	
-
 
 	and $s0, $t0, 128
 	srl $s0, $s0, 7
@@ -199,41 +214,33 @@ printXor:
 
 
 	and $s0, $t0, 64
-	sll $s0, $s0, 1
-	srl $s0, $s0, 7
+	srl $s0, $s0, 6
 	jal print
 
 	and $s0, $t0, 32
-	sll $s0, $s0, 2
-	srl $s0, $s0, 7
+	srl $s0, $s0, 5
 	jal print
 
 
 
 	and $s0, $t0, 16
-	sll $s0, $s0, 3
-	srl $s0, $s0, 7
+	srl $s0, $s0, 4
 	jal print
 
 
 	and $s0, $t0, 8
-	sll $s0, $s0, 4
-	srl $s0, $s0, 7
+	srl $s0, $s0, 3
 	jal print
 
 	and $s0, $t0, 4
-	sll $s0, $s0, 5
-	srl $s0, $s0, 7
+	srl $s0, $s0, 2
 	jal print
 
 	and $s0, $t0, 2
-	sll $s0, $s0, 6
-	srl $s0, $s0, 7
+	srl $s0, $s0, 1
 	jal print
 
 	and $s0, $t0, 1
-	sll $s0, $s0, 7
-	srl $s0, $s0, 7
 	jal print
 
 	j end	
@@ -265,11 +272,4 @@ main_end:
 #----------------------------------------------------------------
 # END OF CODE
 #----------------------------------------------------------------
-
-
-
-	
-
-	
-
 
