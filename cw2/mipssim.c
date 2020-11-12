@@ -8,13 +8,16 @@
 #include "mipssim.h"
 
 #define BREAK_POINT 200000 // exit after so many cycles -- useful for debugging
-
+#define I_TYPE      2
+#define J_TYPE      3
 // Global variables
 char mem_init_path[1000];
 char reg_init_path[1000];
 
 uint32_t cache_size = 0;
 struct architectural_state arch_state;
+
+
 
 static inline uint8_t get_instruction_type(int opcode)
 {
@@ -27,7 +30,20 @@ static inline uint8_t get_instruction_type(int opcode)
             return EOP_TYPE;
 
         ///@students: fill in the rest
-
+		case ADD:
+			return R_TYPE;
+		case ADDI:
+			return I_TYPE;
+		case LW:
+			return I_TYPE;
+		case SW:
+			return I_TYPE;
+		case BEQ:
+			return I_TYPE;
+		case J:
+			return J_TYPE;
+		case SLT:
+			return R_TYPE;
         default:
             assert(false);
     }
@@ -45,38 +61,109 @@ void FSM()
 
     int opcode = IR_meta->opcode;
     int state = arch_state.state;
-    switch (state) {
+    switch (state)
+	{
         case INSTR_FETCH:
-            control->MemRead = 1;
-            control->ALUSrcA = 0;
-            control->IorD = 0;
-            control->IRWrite = 1;
-            control->ALUSrcB = 1;
-            control->ALUOp = 0;
-            control->PCWrite = 1;
+            control->MemRead  = 1;
+            control->ALUSrcA  = 0;
+            control->IorD     = 0;
+            control->IRWrite  = 1;
+            control->ALUSrcB  = 1;
+            control->ALUOp    = 0;
+            control->PCWrite  = 1;
             control->PCSource = 0;
             state = DECODE;
             break;
         case DECODE:
             control->ALUSrcA = 0;
             control->ALUSrcB = 3;
-            control->ALUOp = 0;
+            control->ALUOp   = 0;
             if (IR_meta->type == R_TYPE) state = EXEC;
             else if (opcode == EOP) state = EXIT_STATE;
             else assert(false);
             break;
+		case MEM_ADDR_COMP:
+			control->ALUSrcA = 1;
+			control->ALUSrcB = 2;
+			control->ALUOp   = 0;
+			
+			// op == lw
+			if (opcode == LW) state = MEM_ACCESS_LD;
+			// op == sw
+			else if (opcode == SW) state = MEM_ACCESS_ST;
+			else assert(false);
+
+			break;
+
+		case MEM_ACCESS_LD:
+			control->MemRead = 1;
+			control->IorD    = 1;
+			
+			state = WB_STEP;
+			break;
+
+		case WB_STEP:
+			control->RegDst   = 0;
+			control->RegWrite = 1;
+			control->MemtoReg = 1;
+
+			state = INSTR_FETCH;
+
+		case MEM_ACCESS_ST:
+			control->MemWrite = 1;
+			control->IorD     = 1;
+			
+			state = INSTR_FETCH;
+			break; 
+
         case EXEC:
             control->ALUSrcA = 1;
             control->ALUSrcB = 0;
-            control->ALUOp = 2;
+            control->ALUOp   = 2;
+
             state = R_TYPE_COMPL;
             break;
+
         case R_TYPE_COMPL:
-            control->RegDst = 1;
+            control->RegDst   = 1;
             control->RegWrite = 1;
             control->MemtoReg = 0;
+
             state = INSTR_FETCH;
             break;
+		case BRANCH_COMPL:
+			control->ALUSrcA = 1;
+			control->ALUSrcB = 0;
+			control->ALUOp   = 1;
+			control->PCWriteCond = 1;
+			control->PCSource    = 1;
+			
+			state = INSTR_FETCH;
+			break;
+
+		case JUMP_COMPL:
+			control->PCWrite  = 1;
+			control->PCSource = 2;
+
+			state = INSTR_FETCH;
+			break;
+
+		case I_TYPE_EXEC:
+			control->ALUSrcA = 1;
+			control->ALUSrcB = 2;
+			control->ALUOp   = 0;
+
+			state = I_TYPE_COMPL;
+			break;
+
+		case I_TYPE_COMPL:
+			control->MemtoReg = 0;
+			control->RegDst   = 0;
+			control->RegWrite = 1;
+			
+			state = INSTR_FETCH;
+			break;
+
         default: assert(false);
     }
     arch_state.state = state;
@@ -85,7 +172,8 @@ void FSM()
 
 void instruction_fetch()
 {
-    if (arch_state.control.MemRead) {
+    if (arch_state.control.MemRead) 
+	{
         int address = arch_state.curr_pipe_regs.pc;
         arch_state.next_pipe_regs.IR = memory_read(address);
     }
@@ -112,7 +200,9 @@ void execute()
     int alu_opB = 0;
     int immediate = IR_meta->immediate;
     int shifted_immediate = (immediate) << 2;
-    switch (control->ALUSrcB) {
+
+    switch (control->ALUSrcB) 
+	{
         case 0:
             alu_opB = curr_pipe_regs->B;
             break;
@@ -127,7 +217,8 @@ void execute()
     }
 
 
-    switch (control->ALUOp) {
+    switch (control->ALUOp) 
+	{
         case 0:
             next_pipe_regs->ALUOut = alu_opA + alu_opB;
             break;
@@ -142,7 +233,8 @@ void execute()
     }
 
     // PC calculation
-    switch (control->PCSource) {
+    switch (control->PCSource)
+	{
         case 0:
             next_pipe_regs->pc = next_pipe_regs->ALUOut;
             break;
@@ -152,17 +244,20 @@ void execute()
 }
 
 
-void memory_access() {
+void memory_access() 
+{
   ///@students: appropriate calls to functions defined in memory_hierarchy.c must be added
 }
 
 void write_back()
 {
-    if (arch_state.control.RegWrite) {
+    if (arch_state.control.RegWrite) 
+	{
         int write_reg_id =  arch_state.IR_meta.reg_11_15;
         check_is_valid_reg_id(write_reg_id);
         int write_data =  arch_state.curr_pipe_regs.ALUOut;
-        if (write_reg_id > 0) {
+        if (write_reg_id > 0)
+		{
             arch_state.registers[write_reg_id] = write_data;
             //printf("Reg $%u = %d \n", write_reg_id, write_data);
         } else printf("Attempting to write reg_0. That is likely a mistake \n");
@@ -181,7 +276,8 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
     IR_meta->reg_21_25 = (uint8_t) get_piece_of_a_word(IR, 21, REGISTER_ID_SIZE);
     IR_meta->type = get_instruction_type(IR_meta->opcode);
 
-    switch (IR_meta->opcode) {
+    switch (IR_meta->opcode)
+	{
         case SPECIAL:
             if (IR_meta->function == ADD)
                 printf("Executing ADD(%d), $%u = $%u + $%u (function: %u) \n",
@@ -202,7 +298,8 @@ void assign_pipeline_registers_for_the_next_cycle()
     struct pipe_regs *curr_pipe_regs = &arch_state.curr_pipe_regs;
     struct pipe_regs *next_pipe_regs = &arch_state.next_pipe_regs;
 
-    if (control->IRWrite) {
+    if (control->IRWrite) 
+	{
         curr_pipe_regs->IR = next_pipe_regs->IR;
         printf("PC %d: ", curr_pipe_regs->pc / 4);
         set_up_IR_meta(curr_pipe_regs->IR, IR_meta);
@@ -210,7 +307,8 @@ void assign_pipeline_registers_for_the_next_cycle()
     curr_pipe_regs->ALUOut = next_pipe_regs->ALUOut;
     curr_pipe_regs->A = next_pipe_regs->A;
     curr_pipe_regs->B = next_pipe_regs->B;
-    if (control->PCWrite) {
+    if (control->PCWrite) 
+	{
         check_address_is_word_aligned(next_pipe_regs->pc);
         curr_pipe_regs->pc = next_pipe_regs->pc;
     }
