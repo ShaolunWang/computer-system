@@ -43,7 +43,7 @@ static inline uint8_t get_instruction_type(int opcode)
 		case J:
 			return J_TYPE;
 		case SLT:
-			return R_TYPE;0]) << 2); 
+			return R_TYPE;
         default:
             assert(false);
     }
@@ -201,16 +201,19 @@ void execute()
     int alu_opA = control->ALUSrcA == 1 ? curr_pipe_regs->A : curr_pipe_regs->pc;
     int alu_opB = 0;
     int immediate = IR_meta->immediate;
+￼
     int shifted_immediate = (immediate) << 2;
 	
     switch (control->ALUSrcB) 
 	{
         case 0:
-            alu_opB = curr_pipe_regs->B;
+            alu_opB = curr_pipe_regs -> B;
             break;
         case 1:
             alu_opB = WORD_SIZE;
             break;
+		case 2:
+			alu_opB = immediate;
         case 3:
             alu_opB = shifted_immediate; 
             break;
@@ -222,19 +225,19 @@ void execute()
     switch (control->ALUOp)
 	{
         case 0:
-			
-            break;
+			//Add
+			next_pipe_regs->ALUOut = alu_opA + alu_opB;	
+
+		case 1:
+			//Sub
+			next_pipe_regs->ALUOut = alu_opA - alu_opB;
+
         case 2:
+			//R-Type
             if (IR_meta->function == ADD)
                 next_pipe_regs->ALUOut = alu_opA + alu_opB;
-		/*	if (IR_meta->function == LW)
-				next_pipe_regs->ALUOut = alu_opA + alu_opB; 
-			if (IR_meta->function == SW)
-				next_pipe_regs->ALUOut = alu_opA + alu_opB;
-			if (IR_meta->function == slt)
-				next_pipe_regs->ALUOut = alu_opA + alu_opB;
-			if	
-		*/
+			if (IR_meta->function == SLT)
+				next_pipe_regs->ALUOut = (alu_opA < alu_opB) ? 1 : 0;
 
             else
                 assert(false);
@@ -249,9 +252,11 @@ void execute()
     switch (control->PCSource)
 	{
         case 0:
+			// Output of the ALU (PC+4) is sent to the pc for writing.
             next_pipe_regs->pc = next_pipe_regs->ALUOut;
             break;
 		case 1:
+			//send the contents of ALUOut to the pc
 			next_pipe_regs->pc = curr_pipe_regs->ALUOut;
 		case 2:
 			 int IR_0_25  = get_piece_of_a_word(pipe_regs->IR, 0, 25);
