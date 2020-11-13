@@ -43,7 +43,7 @@ static inline uint8_t get_instruction_type(int opcode)
 		case J:
 			return J_TYPE;
 		case SLT:
-			return R_TYPE;
+			return R_TYPE;0]) << 2); 
         default:
             assert(false);
     }
@@ -148,7 +148,7 @@ void FSM()
 			state = INSTR_FETCH;
 			break;
 
-		case I_TYPE_EXEC:
+		case I_TYPE_EXECINSTRUCTION DECODE + :
 			control->ALUSrcA = 1;
 			control->ALUSrcB = 2;
 			control->ALUOp   = 0;
@@ -187,6 +187,8 @@ void decode_and_read_RF()
     check_is_valid_reg_id(read_register_2);
     arch_state.next_pipe_regs.A = arch_state.registers[read_register_1];
     arch_state.next_pipe_regs.B = arch_state.registers[read_register_2];
+	
+
 }
 
 void execute()
@@ -200,7 +202,7 @@ void execute()
     int alu_opB = 0;
     int immediate = IR_meta->immediate;
     int shifted_immediate = (immediate) << 2;
-
+	
     switch (control->ALUSrcB) 
 	{
         case 0:
@@ -210,27 +212,38 @@ void execute()
             alu_opB = WORD_SIZE;
             break;
         case 3:
-            alu_opB = shifted_immediate;
+            alu_opB = shifted_immediate; 
             break;
         default:
             assert(false);
     }
 
-
-    switch (control->ALUOp) 
+	//memory address computation, branch completion, jump completion
+    switch (control->ALUOp)
 	{
         case 0:
-            next_pipe_regs->ALUOut = alu_opA + alu_opB;
+			
             break;
         case 2:
             if (IR_meta->function == ADD)
                 next_pipe_regs->ALUOut = alu_opA + alu_opB;
+		/*	if (IR_meta->function == LW)
+				next_pipe_regs->ALUOut = alu_opA + alu_opB; 
+			if (IR_meta->function == SW)
+				next_pipe_regs->ALUOut = alu_opA + alu_opB;
+			if (IR_meta->function == slt)
+				next_pipe_regs->ALUOut = alu_opA + alu_opB;
+			if	
+		*/
+
             else
                 assert(false);
             break;
         default:
             assert(false);
-    }
+	}
+
+
 
     // PC calculation
     switch (control->PCSource)
@@ -238,6 +251,13 @@ void execute()
         case 0:
             next_pipe_regs->pc = next_pipe_regs->ALUOut;
             break;
+		case 1:
+			next_pipe_regs->pc = curr_pipe_regs->ALUOut;
+		case 2:
+			 int IR_0_25  = get_piece_of_a_word(pipe_regs->IR, 0, 25);
+			 int IR_28_31 = get_piece_of_a_word(pipe_regs->IR, 28, 31);
+			 next_pipe_regs->pc = (curr_pipe_regs->pc + IR_28_31) || ((IR_0_25) << 2);
+			 break;
         default:
             assert(false);
     }
