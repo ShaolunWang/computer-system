@@ -165,7 +165,7 @@ static inline void instruction_parser(uint32_t *memory,  char* instr_file_path,
 
 static inline void check_is_valid_reg_id(int reg_id)
 {
-    assert(reg_id >= 0);
+    assert(reg_id >= 0);	
     assert(reg_id < REGISTER_NUM);
 }
 
