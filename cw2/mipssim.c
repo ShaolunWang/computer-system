@@ -247,6 +247,7 @@ void execute()
             break;
 		case 2:
 			alu_opB = immediate;
+			break;
         case 3:
             alu_opB = shifted_immediate; 
             break;
@@ -265,6 +266,7 @@ void execute()
 		case 1:
 			//Sub (branch)
 			next_pipe_regs->ALUOut = alu_opA - alu_opB; 
+			printf("A: %d; B: %d ; ALUOut: %d \n", alu_opA, alu_opB, next_pipe_regs->ALUOut);
 			break;
 
         case 2:
@@ -302,12 +304,22 @@ void execute()
             break;
 		case 1:
 			//send the contents of ALUOut to the pc
-			//if (curr_pipe_regs->A == curr_pipe_regs->B && control->PCWriteCond == 1)
-				next_pipe_regs->pc = curr_pipe_regs->ALUOut;
+			switch(control->PCWriteCond)
+			{
+				case 1:
+					if (next_pipe_regs->ALUOut == 0)
+						next_pipe_regs->pc = curr_pipe_regs->ALUOut;
+					else
+						next_pipe_regs->pc = curr_pipe_regs->pc+WORD_SIZE;
+					break;
+				case 0:
+					next_pipe_regs->pc = curr_pipe_regs->ALUOut;
+					break;
+			}
 			
 			break;
 		case 2:
-			 next_pipe_regs->pc = (get_piece_of_a_word(curr_pipe_regs->pc,28,31)  || IR_meta->jmp_offset << 2);
+			next_pipe_regs->pc = (get_piece_of_a_word(curr_pipe_regs->pc,28,31)  || IR_meta->jmp_offset << 2);
 			 break;
         default:
             assert(false);
@@ -323,6 +335,7 @@ void memory_access()
 	//lw
 	if (control->MemRead == 1 && control->IorD == 1)
 	{
+		check_address_is_word_aligned(arch_state.curr_pipe_regs.ALUOut);
 		arch_state.curr_pipe_regs.MDR = memory_read(arch_state.curr_pipe_regs.ALUOut);
 	}
 
@@ -369,7 +382,7 @@ void write_back()
 	if (control->MemtoReg == 0 && control->RegDst == 0 && control->RegWrite == 1)
 	{
 
-			check_is_valid_reg_id(arch_state.IR_meta.reg_16_20);
+		check_is_valid_reg_id(arch_state.IR_meta.reg_16_20);
 		arch_state.registers[arch_state.IR_meta.reg_16_20] = arch_state.curr_pipe_regs.ALUOut;
 	}
 
@@ -476,26 +489,22 @@ void assign_pipeline_registers_for_the_next_cycle()
     struct pipe_regs *curr_pipe_regs = &arch_state.curr_pipe_regs;
     struct pipe_regs *next_pipe_regs = &arch_state.next_pipe_regs;
 
-    if (control->IRWrite) {
+    if (control->IRWrite)
+	{
         curr_pipe_regs->IR = next_pipe_regs->IR;
         printf("PC %d: ", curr_pipe_regs->pc / 4);
         set_up_IR_meta(curr_pipe_regs->IR, IR_meta);
-    }
-    curr_pipe_regs->ALUOut = next_pipe_regs->ALUOut;
+    } 
+
+	curr_pipe_regs->ALUOut = next_pipe_regs->ALUOut;
     curr_pipe_regs->A = next_pipe_regs->A;
     curr_pipe_regs->B = next_pipe_regs->B;
-    if (control->PCWrite)
+
+  	if (control->PCWrite)
 	{
         check_address_is_word_aligned(next_pipe_regs->pc);
         curr_pipe_regs->pc = next_pipe_regs->pc;
     }
-	if (control->PCWriteCond)
-	{
-		//check_address_is_word_aligned(next_pipe_regs->pc);
-		curr_pipe_regs->pc = 
-			next_pipe_regs->ALUOut == 0 ? 
-			curr_pipe_regs->ALUOut : next_pipe_regs->pc;
-	}
 }
 
 
@@ -508,7 +517,7 @@ int main(int argc, const char* argv[])
     arch_state_init(&arch_state);
     ///@students WARNING: Do NOT change/move/remove main's code above this point!
 //	int i = 1;
-//	int k = 1;
+	int k = 1;
 	
 
     while (true) 
@@ -536,7 +545,7 @@ int main(int argc, const char* argv[])
 //		printf("write back ok.\n");
         
 		assign_pipeline_registers_for_the_next_cycle();
-/*
+
 		if (k == 5)
 		{
 			k = 1;
@@ -556,7 +565,7 @@ int main(int argc, const char* argv[])
 		
 				
 		printf("--------------------------------------\n");
-*/
+
        ///@students WARNING: Do NOT change/move/remove code below this point!
         marking_after_clock_cycle();
         arch_state.clock_cycle++;
