@@ -32,7 +32,6 @@ static inline uint8_t get_instruction_type(int opcode)
             return R_TYPE;
         case EOP:
             return EOP_TYPE;
-
         ///@students: fill in the rest
 		case ADD:
 			return R_TYPE;
@@ -112,6 +111,7 @@ void FSM()
 			else if (IR_meta->type == B_TYPE)
 			{
 				state = BRANCH_COMPL;
+				break;
 			}
             else assert(false);
 
@@ -142,7 +142,7 @@ void FSM()
 			control->MemtoReg = 1;
 
 			state = INSTR_FETCH;
-
+			break;
 		case MEM_ACCESS_ST: 
 			control->MemWrite = 1;
 			control->IorD     = 1;
@@ -266,7 +266,6 @@ void execute()
 		case 1:
 			//Sub (branch)
 			next_pipe_regs->ALUOut = alu_opA - alu_opB; 
-			printf("A: %d; B: %d ; ALUOut: %d \n", alu_opA, alu_opB, next_pipe_regs->ALUOut);
 			break;
 
         case 2:
@@ -279,7 +278,7 @@ void execute()
 			}
 			else if (IR_meta->function == SLT)
 			{
-				next_pipe_regs->ALUOut = (alu_opA < alu_opB) ? 1 : 0;
+				next_pipe_regs->ALUOut = alu_opA < alu_opB ? 1 : 0;
 				break;
 			}
 			else if (IR_meta->function == ADDU)
@@ -304,22 +303,16 @@ void execute()
             break;
 		case 1:
 			//send the contents of ALUOut to the pc
-			switch(control->PCWriteCond)
+			if (next_pipe_regs->ALUOut == 0)
 			{
-				case 1:
-					if (next_pipe_regs->ALUOut == 0)
-						next_pipe_regs->pc = curr_pipe_regs->ALUOut;
-					else
-						next_pipe_regs->pc = curr_pipe_regs->pc+WORD_SIZE;
-					break;
-				case 0:
-					next_pipe_regs->pc = curr_pipe_regs->ALUOut;
-					break;
+				next_pipe_regs->pc = curr_pipe_regs->ALUOut;
 			}
-			
+			else
+				next_pipe_regs->pc = curr_pipe_regs->pc + WORD_SIZE;
 			break;
 		case 2:
-			next_pipe_regs->pc = (get_piece_of_a_word(curr_pipe_regs->pc,28,31)  || IR_meta->jmp_offset << 2);
+			next_pipe_regs->pc = 
+				(get_piece_of_a_word(curr_pipe_regs->pc,28,4) + (IR_meta->jmp_offset << 2));
 			 break;
         default:
             assert(false);
@@ -335,6 +328,7 @@ void memory_access()
 	//lw
 	if (control->MemRead == 1 && control->IorD == 1)
 	{
+
 		check_address_is_word_aligned(arch_state.curr_pipe_regs.ALUOut);
 		arch_state.curr_pipe_regs.MDR = memory_read(arch_state.curr_pipe_regs.ALUOut);
 	}
@@ -342,7 +336,7 @@ void memory_access()
 	//sw
 	if (control->MemWrite == 1 && control->IorD ==1)
 	{
-
+		check_address_is_word_aligned(arch_state.curr_pipe_regs.ALUOut);
 		memory_write(arch_state.curr_pipe_regs.ALUOut, arch_state.curr_pipe_regs.B);
 	}
 
@@ -372,8 +366,7 @@ void write_back()
         if (write_reg_id > 0)
 		{
             arch_state.registers[write_reg_id] = write_data;
-            printf("Reg $%u = %d \n",write_reg_id, write_data);
-			printf("pc:%d\n", arch_state.next_pipe_regs.pc / 4);
+			//printf("pc:%d\n", arch_state.next_pipe_regs.pc / 4);
         }
 	
 		else printf("Attempting to write reg_0. That is likely a mistake \n");
@@ -403,8 +396,6 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
     switch (IR_meta->opcode)
 	{
         case SPECIAL:
-			printf("IR: %d ", IR);
-			printf("SPECIAL: %d\n",IR_meta->opcode);
             if (IR_meta->function == ADD)
 			{
 
@@ -418,7 +409,7 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
 			}
 			else if (IR_meta->function == SLT)
 			{
-				printf("Executing SLT(%d), $%u = $%u > $%u (function: %u) \n",
+				printf("Executing SLT(%d), $%u = $%u < $%u (function: %u) \n",
 					IR_meta->opcode, 
 					IR_meta->reg_11_15, 
 					IR_meta->reg_21_25,  
@@ -505,7 +496,14 @@ void assign_pipeline_registers_for_the_next_cycle()
         check_address_is_word_aligned(next_pipe_regs->pc);
         curr_pipe_regs->pc = next_pipe_regs->pc;
     }
+	if (control->PCWriteCond)
+	{
+        check_address_is_word_aligned(next_pipe_regs->pc);
+        curr_pipe_regs->pc = next_pipe_regs->pc;
+    }
+
 }
+
 
 
 int main(int argc, const char* argv[])
@@ -516,9 +514,6 @@ int main(int argc, const char* argv[])
     parse_arguments(argc, argv);
     arch_state_init(&arch_state);
     ///@students WARNING: Do NOT change/move/remove main's code above this point!
-//	int i = 1;
-	int k = 1;
-	
 
     while (true) 
 	{
@@ -530,41 +525,18 @@ int main(int argc, const char* argv[])
         FSM();
 
         instruction_fetch();
-//		printf("cycle %d: fetch ok.\n", i);
         
 		decode_and_read_RF();
-//		printf("decode and read ok.\n");
 
         execute();
-//		printf("execute ok.\n");
 
         memory_access();
-//		printf("memory access ok.\n");
         
 		write_back();
-//		printf("write back ok.\n");
         
 		assign_pipeline_registers_for_the_next_cycle();
 
-		if (k == 5)
-		{
-			k = 1;
-			for(int j = 0; j < 32;j++)
-			{
-				if (arch_state.registers[j] != 0)
-					printf("$%d : %d \n", j, arch_state.registers[j]);
-			}
-
-		}
-		else
-		{
-			k++;
-		}
-
-		printf("\n");
-		
 				
-		printf("--------------------------------------\n");
 
        ///@students WARNING: Do NOT change/move/remove code below this point!
         marking_after_clock_cycle();
