@@ -289,12 +289,10 @@ void execute()
 			//send the contents of ALUOut to the pc
 			if (next_pipe_regs->ALUOut == 0)
 				next_pipe_regs->pc = curr_pipe_regs->ALUOut;
-			else
-				next_pipe_regs->pc = curr_pipe_regs->pc;
-
 			break;
+
 		case 2:
-			next_pipe_regs->pc = (get_piece_of_a_word(curr_pipe_regs->pc,28,4)<<28 | (IR_meta->jmp_offset << 2));
+			next_pipe_regs->pc = (get_piece_of_a_word(curr_pipe_regs->pc,28,4) << 28 | (IR_meta->jmp_offset << 2));
 			 break;
         default:
             assert(false);
@@ -443,6 +441,16 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
             break;
         default: assert(false);
     }
+	printf("\n");
+	for(int j = 0; j < 32;j++)
+	{
+		if (arch_state.registers[j] != 0)
+			printf("$%d : %d \n", j, arch_state.registers[j]);
+	}
+	
+	printf("cycle: %lu\n", arch_state.clock_cycle);
+	printf("\n--------------------------------------\n");
+	printf("--------------------------------------\n\n");
 }
 
 
@@ -464,14 +472,9 @@ void assign_pipeline_registers_for_the_next_cycle()
     curr_pipe_regs->A = next_pipe_regs->A;
     curr_pipe_regs->B = next_pipe_regs->B;
 
-  	if (control->PCWrite)
+  	if (control->PCWrite || control->PCWriteCond)
 	{
 		check_address_is_word_aligned(next_pipe_regs->pc);
-        curr_pipe_regs->pc = next_pipe_regs->pc;
-    }
-	if (control->PCWriteCond)
-	{
-        check_address_is_word_aligned(next_pipe_regs->pc);
         curr_pipe_regs->pc = next_pipe_regs->pc;
     }
 }
@@ -486,29 +489,12 @@ int main(int argc, const char* argv[])
     parse_arguments(argc, argv);
     arch_state_init(&arch_state);
     ///@students WARNING: Do NOT change/move/remove main's code above this point!
-	int k = 1;
-	int i = 1;
     while (true) 
 	{
 
         ///@students: Fill/modify the function bodies of the 7 functions below,
         /// Do NOT modify the main() itself, you only need to
         /// write code inside the definitions of the functions called below.
-		if (arch_state.clock_cycle % 5 == 0)
-		{
-
-			printf("\n");
-			for(int j = 0; j < 32;j++)
-			{
-				if (arch_state.registers[j] != 0)
-					printf("$%d : %d \n", j, arch_state.registers[j]);
-			}
-			printf("\n--------------------------------------\n");
-			printf("--------------------------------------\n\n");
-
-		}
-		else
-			k++;
 
         FSM();
 
@@ -524,8 +510,6 @@ int main(int argc, const char* argv[])
         
 		assign_pipeline_registers_for_the_next_cycle();
 
-		if (arch_state.clock_cycle % 5 == 0)
-			printf("Cycle : %lu \n", arch_state.clock_cycle);
        ///@students WARNING: Do NOT change/move/remove code below this point!
         marking_after_clock_cycle();
         arch_state.clock_cycle++;
