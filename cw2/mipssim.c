@@ -84,35 +84,23 @@ void FSM()
             control->ALUSrcB = 3;
             control->ALUOp   = 0;
             if (IR_meta->type == R_TYPE) 
-			{
 				state = EXEC;
-				break;
-			}
+
             else if (opcode == EOP) 
-			{
 				state = EXIT_STATE;
-				break;
-			}
+
 			else if (IR_meta->type == I_TYPE)
-			{
 				state = I_TYPE_EXEC;
-				break;
-			}
+
 			else if (IR_meta->type == J_TYPE)
-			{
 				state = JUMP_COMPL;
-				break;
-			}
+
 			else if (IR_meta->type == M_TYPE)
-			{
 				state = MEM_ADDR_COMP;
-				break;
-			}
+
 			else if (IR_meta->type == B_TYPE)
-			{
 				state = BRANCH_COMPL;
-				break;
-			}
+
             else assert(false);
 
 			break;
@@ -272,23 +260,18 @@ void execute()
 			//R-Type
 			
             if (IR_meta->function == ADD)
-			{
                 next_pipe_regs->ALUOut = alu_opA + alu_opB;
-				break;
-			}
+
 			else if (IR_meta->function == SLT)
-			{
 				next_pipe_regs->ALUOut = alu_opA < alu_opB ? 1 : 0;
-				break;
-			}
+
 			else if (IR_meta->function == ADDU)
-			{
 				next_pipe_regs->ALUOut = alu_opA + alu_opB;	
-				break;
-			}
+
             else
-                assert(false);
+				assert(false);
             break;
+
         default:
             assert(false);
 	}
@@ -303,16 +286,15 @@ void execute()
             break;
 		case 1:
 			//send the contents of ALUOut to the pc
-			if (next_pipe_regs->ALUOut == 0)
-			{
+			if (curr_pipe_regs->ALUOut == 0)
 				next_pipe_regs->pc = curr_pipe_regs->ALUOut;
-			}
 			else
-				next_pipe_regs->pc = curr_pipe_regs->pc + WORD_SIZE;
+				next_pipe_regs->pc = curr_pipe_regs->pc;
+
 			break;
 		case 2:
 			next_pipe_regs->pc = 
-				(get_piece_of_a_word(curr_pipe_regs->pc,28,4) + (IR_meta->jmp_offset << 2));
+				(get_piece_of_a_word(curr_pipe_regs->pc,28,4)<<28 | (IR_meta->jmp_offset << 2));
 			 break;
         default:
             assert(false);
@@ -347,12 +329,6 @@ void memory_access()
 		check_is_valid_reg_id(arch_state.IR_meta.reg_11_15);
 		arch_state.registers[arch_state.IR_meta.reg_11_15] = arch_state.curr_pipe_regs.ALUOut;
 	}
-
-	//I-type completion
-			
-	
-	//branch completion
-
 }
 
 void write_back()
@@ -399,70 +375,67 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
             if (IR_meta->function == ADD)
 			{
 
-                printf("Executing ADD(%d), $%u = $%u + $%u (function: %u) \n",
+                printf("Executing ADD(%d): $%u = $%u + $%u (function: %u) \n",
 					IR_meta->opcode,  
 					IR_meta->reg_11_15, 
 					IR_meta->reg_21_25,  
 					IR_meta->reg_16_20, 
 					IR_meta->function);
-				break;
 			}
 			else if (IR_meta->function == SLT)
 			{
-				printf("Executing SLT(%d), $%u = $%u < $%u (function: %u) \n",
+				printf("Executing SLT(%d): $%u = $%u < $%u (function: %u) \n",
 					IR_meta->opcode, 
 					IR_meta->reg_11_15, 
 					IR_meta->reg_21_25,  
 					IR_meta->reg_16_20, 
 					IR_meta->function);
-				break;
 			}
 			else if (IR_meta->function == ADDU)
 			{
-				printf("Executing ADDU(%d), $%u = $%u + $%u (function: %u) \n",
+				printf("Executing ADDU(%d): $%u = $%u + $%u (function: %u) \n",
 					IR_meta->opcode,  
 					IR_meta->reg_11_15,
 					IR_meta->reg_21_25,  
 					IR_meta->reg_16_20, 
 					IR_meta->function);
-				break;
 			}
             else 
 				assert(false);
-           		break;
+           	break;
 
 		case LW:
 		
-			printf("Executing LW(%d) $%u = %u($%u)\n", 
+			printf("Executing LW(%d): $%u = %u($%u)\n", 
 					IR_meta->opcode, 
 					IR_meta->reg_16_20, 
-					IR_meta->reg_21_25, 
-					IR_meta->immediate);
+					IR_meta->immediate,
+					IR_meta->reg_21_25);
 			break;
 		
 		case SW:
-			printf("Executing SW(%d) $%u = %u($%u)\n", 
+			printf("Executing SW(%d): $%u = %u($%u)\n", 
 					IR_meta->opcode, 
 					IR_meta->reg_16_20, 
-					IR_meta->reg_21_25, 
-					IR_meta->immediate);
+					IR_meta->immediate,
+					IR_meta->reg_21_25);
 			break;
 		case BEQ:
-			printf("Executing BEQ(%d) if ($%u == $%u) do %u\n",
+			printf("Executing BEQ(%d): if ($%u == $%u) do %u\n",
 					IR_meta->opcode, 
 					IR_meta->reg_16_20, 
 					IR_meta->reg_21_25, 
 					IR_meta->immediate);
 			break;
 		case ADDI:
-			printf("Executing ADDI(%d) $%u = $%u + %u \n",
+			printf("Executing ADDI(%d): $%u = $%u + %u \n",
 					IR_meta->opcode, 
 					IR_meta->reg_16_20, 
 					IR_meta->reg_21_25, 
 					IR_meta->immediate);
 			break;
 		case J:
-			printf("Executing J(%d), %u\n", 
+			printf("Executing J(%d): %u\n", 
 					IR_meta->opcode, IR_meta->jmp_offset);
 			break;
         case EOP:
@@ -493,7 +466,7 @@ void assign_pipeline_registers_for_the_next_cycle()
 
   	if (control->PCWrite)
 	{
-        check_address_is_word_aligned(next_pipe_regs->pc);
+		check_address_is_word_aligned(next_pipe_regs->pc);
         curr_pipe_regs->pc = next_pipe_regs->pc;
     }
 	if (control->PCWriteCond)
@@ -501,7 +474,6 @@ void assign_pipeline_registers_for_the_next_cycle()
         check_address_is_word_aligned(next_pipe_regs->pc);
         curr_pipe_regs->pc = next_pipe_regs->pc;
     }
-
 }
 
 
@@ -514,30 +486,52 @@ int main(int argc, const char* argv[])
     parse_arguments(argc, argv);
     arch_state_init(&arch_state);
     ///@students WARNING: Do NOT change/move/remove main's code above this point!
-
+	int k = 1;
+	int i = 1;
     while (true) 
 	{
 
         ///@students: Fill/modify the function bodies of the 7 functions below,
         /// Do NOT modify the main() itself, you only need to
         /// write code inside the definitions of the functions called below.
-			
+		if (arch_state.clock_cycle % 5 == 0)
+		{
+
+			printf("\n");
+			for(int j = 0; j < 32;j++)
+			{
+				if (arch_state.registers[j] != 0)
+					printf("$%d : %d \n", j, arch_state.registers[j]);
+			}
+			printf("\n--------------------------------------\n");
+			printf("--------------------------------------\n\n");
+
+		}
+		else
+			k++;
+
         FSM();
 
         instruction_fetch();
+		printf("cycle %d: fetch ok.\n", i);
         
 		decode_and_read_RF();
+		printf("decode and read ok.\n");
 
         execute();
+		printf("execute ok.\n");
 
         memory_access();
+		printf("memory access ok.\n");
         
 		write_back();
+		printf("write back ok.\n");
         
 		assign_pipeline_registers_for_the_next_cycle();
 
-				
 
+		
+		
        ///@students WARNING: Do NOT change/move/remove code below this point!
         marking_after_clock_cycle();
         arch_state.clock_cycle++;
