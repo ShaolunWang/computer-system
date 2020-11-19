@@ -1,3 +1,4 @@
+
 /*************************************************************************************|
 |   1. YOU ARE NOT ALLOWED TO SHARE/PUBLISH YOUR CODE (e.g., post on piazza or online)|
 |   2. Fill mipssim.c                                                                 |
@@ -286,15 +287,14 @@ void execute()
             break;
 		case 1:
 			//send the contents of ALUOut to the pc
-			if (curr_pipe_regs->ALUOut == 0)
+			if (next_pipe_regs->ALUOut == 0)
 				next_pipe_regs->pc = curr_pipe_regs->ALUOut;
 			else
 				next_pipe_regs->pc = curr_pipe_regs->pc;
 
 			break;
 		case 2:
-			next_pipe_regs->pc = 
-				(get_piece_of_a_word(curr_pipe_regs->pc,28,4)<<28 | (IR_meta->jmp_offset << 2));
+			next_pipe_regs->pc = (get_piece_of_a_word(curr_pipe_regs->pc,28,4)<<28 | (IR_meta->jmp_offset << 2));
 			 break;
         default:
             assert(false);
@@ -513,25 +513,19 @@ int main(int argc, const char* argv[])
         FSM();
 
         instruction_fetch();
-		printf("cycle %d: fetch ok.\n", i);
         
 		decode_and_read_RF();
-		printf("decode and read ok.\n");
 
         execute();
-		printf("execute ok.\n");
 
         memory_access();
-		printf("memory access ok.\n");
         
 		write_back();
-		printf("write back ok.\n");
         
 		assign_pipeline_registers_for_the_next_cycle();
 
-
-		
-		
+		if (arch_state.clock_cycle % 5 == 0)
+			printf("Cycle : %lu \n", arch_state.clock_cycle);
        ///@students WARNING: Do NOT change/move/remove code below this point!
         marking_after_clock_cycle();
         arch_state.clock_cycle++;
@@ -548,3 +542,4 @@ int main(int argc, const char* argv[])
 	}
     marking_at_the_end();
 }
+
