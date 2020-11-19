@@ -289,6 +289,8 @@ void execute()
 			//send the contents of ALUOut to the pc
 			if (next_pipe_regs->ALUOut == 0)
 				next_pipe_regs->pc = curr_pipe_regs->ALUOut;
+			else
+				next_pipe_regs->pc = curr_pipe_regs->pc;
 			break;
 
 		case 2:
@@ -441,16 +443,20 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
             break;
         default: assert(false);
     }
+
+/*	
 	printf("\n");
+
+	printf("cycle: %lu\n", arch_state.clock_cycle);
 	for(int j = 0; j < 32;j++)
 	{
 		if (arch_state.registers[j] != 0)
 			printf("$%d : %d \n", j, arch_state.registers[j]);
 	}
 	
-	printf("cycle: %lu\n", arch_state.clock_cycle);
 	printf("\n--------------------------------------\n");
 	printf("--------------------------------------\n\n");
+*/	
 }
 
 
