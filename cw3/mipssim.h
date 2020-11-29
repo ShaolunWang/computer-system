@@ -182,7 +182,7 @@ static inline void print_cache_stats(struct memory_stats_t *stats){
    uint64_t total_accesses = stats->sw_total+ stats->lw_total;
    double hit_rate =  total_hits * 100.0 / total_accesses;
 
-   printf("ABSOLUTE: cache_hits: %llu/%llu | cache_lw_hits: %llu/%llu | cache_sw_hit_rate: %llu/%llu\n",
+   printf("ABSOLUTE: cache_hits: %lu/%lu | cache_lw_hits: %lu/%lu | cache_sw_hit_rate: %lu/%lu\n",
                   total_hits, total_accesses, stats->lw_cache_hits, stats->lw_total,  stats->sw_cache_hits, stats->sw_total);
 
    printf("RATIOS: cache_hit_rate: %.2f%% | cache_lw_hit_rate: %.2f%% | cache_sw_hit_rate: %.2f%%\n",
