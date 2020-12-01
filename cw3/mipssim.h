@@ -84,7 +84,7 @@ struct architectural_state {
 ////////////////////////////////////////////////////////
 extern char mem_init_path[];
 extern char reg_init_path[];
-extern uint32_t  cache_size;
+extern uint32_t cache_size;
 extern uint32_t cache_type;
 extern struct architectural_state arch_state;
 
