@@ -6,7 +6,7 @@
 |*************************************************************************************/
 
 #include "mipssim.h"
-
+// cache_size = the data size stored in cache
 /*
 *	Fixed parameters:
 *	1. Addresses are 32-bits
@@ -20,49 +20,26 @@
 *	7. LRU replacement policy (when applicable)
 */
 uint32_t cache_type = 0;
-int **cache;
+int block_size  = 16; //without thouse metadata, tag valid etc
+int block_parts = 4; // tag, valid, data, last pushed
+int offset_size = 4;
+int shifted_address; 
 
 
-int get_index(int cache_size)
+struct cache_sucks
 {
-	// helper function to get the index for the cache
-	double index;
-	int block = cache_size / 16;
-	if (block % 2 == 0)
-		index =(int) sqrt((double) block);
-	else
-		index =(int) sqrt((double) block - block % 2) + 1;
-
-	return index;
-}
-
-struct block_entry
-{
-	//fixed
-	int block_size = 16;
-	int offset = 4;
-	//dynamically allocated
-	int tag;
-	int valid;
-	int data = 32;
-}
-struct cache_entry
-{
+	int *cache_store;
+	int LRU;
+	int index_total;
 	int index_size;
-	int set;
-	struct block blocks;
-}
+	int last_pushed; // index for the last one pushed
+	int next_pop; // index for the next one to pop
+} cache;
 
-void cache_init(struct cache_entry cache_entries)
-{
-	cache = malloc(cache_size);
-	for (int i = 0;i < cache_entries.index;i++)
-	{
-		*(cache + i) = malloc(1 + cache_entries.blocks.tag + cache_entries.blocks.data);
-	}
-}
 void memory_state_init(struct architectural_state *arch_state_ptr)
 {
+	
+	
     arch_state_ptr->memory = (uint32_t *) malloc(sizeof(uint32_t) * MEMORY_WORD_NUM);
     memset(arch_state_ptr->memory, 0, sizeof(uint32_t) * MEMORY_WORD_NUM);
     if (cache_size == 0)
@@ -73,15 +50,32 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 	else
 	{
         
-	    //TODO fill # of tag bits for cache 'X' correctly
-		memory_stats_init(arch_state_ptr, arch_state_ptr->bits_for_cache_tag); 
+		memory_stats_init(arch_state_ptr, cache_size); 
+		cache.index_total      = cache_size / block_size;
+		cache.index_size       = (int) log2((double) cache.index_total);
+
+		printf("index total: %d\n", cache.index_total);
+		printf("index size: %d\n", cache.index_size);
+
+
         
         switch(cache_type)
 		{
         	case CACHE_TYPE_DIRECT: // direct mapped
-				cache_init();
+			
+				
+   				cache.cache_store = (int *) malloc(cache.index_total * block_parts * sizeof(uint32_t)); 
+				cache.last_pushed = -1;
 
-            	break;
+   				for (int i = 0; i < cache.index_total; i++)
+				{
+         			*(cache.cache_store + i*block_parts + 0) = 0;
+					*(cache.cache_store + i*block_parts + 1) = -1;
+					*(cache.cache_store + i*block_parts + 2) = 0;
+					*(cache.cache_store + i*block_parts + 3) = 0;
+				}	
+				break;
+
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
             	break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
@@ -93,7 +87,7 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 // returns data on memory[address / 4]
 int memory_read(int address)
 {
-    arch_state.mem_stats.lw_total++;
+	arch_state.mem_stats.lw_total++;
     check_address_is_word_aligned(address);
 
     if (cache_size == 0)
@@ -111,12 +105,38 @@ int memory_read(int address)
         
         switch(cache_type) 
 		{
-        case CACHE_TYPE_DIRECT: // direct mapped
-            break;
-        case CACHE_TYPE_FULLY_ASSOC: // fully associative
-            break;
-        case CACHE_TYPE_2_WAY: // 2-way associative
-            break;
+        	case CACHE_TYPE_DIRECT: // direct mapped
+				// 1 address to tag and index and offset	
+				;
+				
+				int index_num = get_piece_of_a_word(address, offset_size, cache.index_size); 
+				int tag 	  = get_piece_of_a_word(address,(offset_size + cache.index_size), (32-offset_size-cache.index_size));
+				int cache_tag = *(cache.cache_store + index_num*block_parts + 1);
+				
+				//get_piece_of_a_word(address, INDEX_SIZE + OFFSET_SIZE, TAG_SIZE);
+				
+				printf("(lw)address: %d, index: %d, tag:%d, cache_tag: %d\n", address,index_num, tag,cache_tag);	
+				// This part is some temp values that's already stored in cache
+				// we just make them look horter
+				if (cache_tag == tag) 
+				{
+					arch_state.mem_stats.lw_cache_hits++;
+					printf("hits\n");
+				}
+				else
+				{
+					*(cache.cache_store + index_num * block_parts)     = 1; //valid
+					*(cache.cache_store + index_num * block_parts + 1) = tag; //tag
+					*(cache.cache_store + index_num * block_parts + 2) = (int) arch_state.memory[address / 4];//data
+				}
+								
+				//return *(cache.cache_store + index_num*block_parts + 2);
+				return (int) arch_state.memory[address / 4];
+				break;
+        	case CACHE_TYPE_FULLY_ASSOC: // fully associative
+            	break;
+        	case CACHE_TYPE_2_WAY: // 2-way associative
+            	break;
         }
     }
     return 0;
@@ -125,9 +145,8 @@ int memory_read(int address)
 // writes data on memory[address / 4]
 void memory_write(int address, int write_data)
 {
-    arch_state.mem_stats.sw_total++;
+	arch_state.mem_stats.sw_total++;
     check_address_is_word_aligned(address);
-
     if (cache_size == 0) 
 	{
         // CACHE DISABLED
@@ -141,12 +160,40 @@ void memory_write(int address, int write_data)
         
         switch(cache_type) 
 		{
-        case CACHE_TYPE_DIRECT: // direct mapped
-            break;
-        case CACHE_TYPE_FULLY_ASSOC: // fully associative
-            break;
-        case CACHE_TYPE_2_WAY: // 2-way associative
-            break;
-        }
-    }
+	        case CACHE_TYPE_DIRECT: // direct mapped
+    	       	
+				;	
+				int index_num = get_piece_of_a_word(address, offset_size, cache.index_size); 
+				int tag = get_piece_of_a_word(address,offset_size+cache.index_size, (32-offset_size-cache.index_size));;
+			//	get_piece_of_a_word(address, INDEX_SIZE + OFFSET_SIZE, TAG_SIZE);
+
+				int cache_tag = *(cache.cache_store + index_num*block_parts + 1);
+				printf("(sw)index: %d tag:%d, cache_tag: %d\n", index_num, tag, cache_tag);	
+				// This part is some temp values that's already stored in cache
+				// we just make them look horter
+
+				if (cache_tag == tag) 
+				{
+
+					arch_state.mem_stats.sw_cache_hits++;
+
+					printf("hits\n");
+					*(cache.cache_store+ index_num*block_parts + 2) = (uint32_t) write_data;
+					//arch_state.memory[address / 4] = *(cache.cache_store+ index_num*block_parts + 2);
+
+					arch_state.memory[address / 4] = (uint32_t) write_data;
+				}
+				else
+				{
+					arch_state.memory[address / 4] = (uint32_t) write_data;
+				}
+								
+				break;
+
+       		case CACHE_TYPE_FULLY_ASSOC: // fully associative
+            	break;
+        	case CACHE_TYPE_2_WAY: // 2-way associative
+            	break;
+		}
+	}
 }
