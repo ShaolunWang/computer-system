@@ -54,8 +54,6 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 		cache.index_total      = cache_size / block_size;
 		cache.index_size       = (int) log2((double) cache.index_total);
 
-		printf("index total: %d\n", cache.index_total);
-		printf("index size: %d\n", cache.index_size);
 
 
         
@@ -115,7 +113,7 @@ int memory_read(int address)
 				
 				//get_piece_of_a_word(address, INDEX_SIZE + OFFSET_SIZE, TAG_SIZE);
 				
-				printf("(lw)address: %d, index: %d, tag:%d, cache_tag: %d\n", address,index_num, tag,cache_tag);	
+			//	printf("(lw)address: %d, index: %d, tag:%d, cache_tag: %d\n", address,index_num, tag,cache_tag);	
 				// This part is some temp values that's already stored in cache
 				// we just make them look horter
 				if (cache_tag == tag) 
@@ -168,7 +166,7 @@ void memory_write(int address, int write_data)
 			//	get_piece_of_a_word(address, INDEX_SIZE + OFFSET_SIZE, TAG_SIZE);
 
 				int cache_tag = *(cache.cache_store + index_num*block_parts + 1);
-				printf("(sw)index: %d tag:%d, cache_tag: %d\n", index_num, tag, cache_tag);	
+			//	printf("(sw)index: %d tag:%d, cache_tag: %d\n", index_num, tag, cache_tag);	
 				// This part is some temp values that's already stored in cache
 				// we just make them look horter
 
@@ -177,7 +175,6 @@ void memory_write(int address, int write_data)
 
 					arch_state.mem_stats.sw_cache_hits++;
 
-					printf("hits\n");
 					*(cache.cache_store+ index_num*block_parts + 2) = (uint32_t) write_data;
 					//arch_state.memory[address / 4] = *(cache.cache_store+ index_num*block_parts + 2);
 
