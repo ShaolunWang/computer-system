@@ -341,6 +341,8 @@ int main(int argc, const char* argv[])
             break;
         }
     }
+	struct memory_stats_t *mem_state = &arch_state.mem_stats;
+	print_cache_stats(mem_state);
     marking_at_the_end();
 }
 

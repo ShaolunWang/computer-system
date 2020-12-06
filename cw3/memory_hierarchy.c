@@ -22,7 +22,7 @@
 uint32_t cache_type = 0;
 int block_size  = 16; //without thouse metadata, tag valid etc
 int block_parts = 4; // tag, valid, data, last pushed
-int offset_size = 4;
+int offset_size = 2;
 int shifted_address; 
 
 
@@ -62,7 +62,7 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
         	case CACHE_TYPE_DIRECT: // direct mapped
 			
 				
-   				cache.cache_store = (int *) malloc(cache.index_total * block_parts * sizeof(uint32_t)); 
+   				cache.cache_store = (int *) malloc(cache.index_total *block_size*sizeof(uint32_t)); 
 				cache.last_pushed = -1;
 
    				for (int i = 0; i < cache.index_total; i++)
