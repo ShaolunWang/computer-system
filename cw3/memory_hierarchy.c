@@ -185,7 +185,7 @@ void memory_write(int address, int write_data)
 				{
 					arch_state.memory[address / 4] = (uint32_t) write_data;
 				}
-								
+				arch_state_ptr.bits_forchace_tag = tag;	
 				break;
 
        		case CACHE_TYPE_FULLY_ASSOC: // fully associative
