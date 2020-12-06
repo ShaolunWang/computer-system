@@ -22,7 +22,7 @@
 uint32_t cache_type = 0;
 int block_size  = 16; //without thouse metadata, tag valid etc
 int block_parts = 4; // tag, valid, data, last pushed
-int offset_size = 2;
+int offset_size = 4;
 int shifted_address; 
 
 
@@ -129,6 +129,7 @@ int memory_read(int address)
 				}
 								
 				//return *(cache.cache_store + index_num*block_parts + 2);
+				arch_state_ptr.bits_forchace_tag = tag;
 				return (int) arch_state.memory[address / 4];
 				break;
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
