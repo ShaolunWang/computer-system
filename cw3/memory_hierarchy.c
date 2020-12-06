@@ -75,9 +75,30 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 				break;
 
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
-            	break;
+				cache.cache_store = (int *) malloc(cache.index_total *block_size*sizeof(uint32_t)); 
+				cache.last_pushed = -1;
+
+   				for (int i = 0; i < cache.index_total; i++)
+				{
+         			*(cache.cache_store + i*block_parts + 0) = 0;
+					*(cache.cache_store + i*block_parts + 1) = -1;
+					*(cache.cache_store + i*block_parts + 2) = 0;
+					*(cache.cache_store + i*block_parts + 3) = 0;
+				}	
+				break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
-            	break;
+            	cache.cache_store = (int *) malloc(cache.index_total *block_size*sizeof(uint32_t)); 
+				cache.last_pushed = -1;
+
+   				for (int i = 0; i < cache.index_total; i++)
+				{
+         			*(cache.cache_store + i*block_parts + 0) = 0;
+					*(cache.cache_store + i*block_parts + 1) = -1;
+					*(cache.cache_store + i*block_parts + 2) = 0;
+					*(cache.cache_store + i*block_parts + 3) = 0;
+				}	
+				break;
+
         }
     }
 }
@@ -129,12 +150,15 @@ int memory_read(int address)
 				}
 								
 				//return *(cache.cache_store + index_num*block_parts + 2);
-				arch_state_ptr.bits_forchace_tag = tag;
+				arch_state.bits_for_cache_tag = tag;
 				return (int) arch_state.memory[address / 4];
 				break;
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
+				
+				arch_state.bits_for_cache_tag = tag;
             	break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
+				arch_state.bits_for_cache_tag = tag;
             	break;
         }
     }
@@ -185,12 +209,14 @@ void memory_write(int address, int write_data)
 				{
 					arch_state.memory[address / 4] = (uint32_t) write_data;
 				}
-				arch_state_ptr.bits_forchace_tag = tag;	
+				arch_state.bits_for_cache_tag = tag;	
 				break;
 
        		case CACHE_TYPE_FULLY_ASSOC: // fully associative
+				arch_state.bits_for_cache_tag = tag;
             	break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
+				arch_state.bits_for_cache_tag = tag;
             	break;
 		}
 	}
