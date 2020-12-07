@@ -91,9 +91,10 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 				}	
 				cache.next_pop = 0;
 				cache.empty_block = 0;
-				arch_state.bits_for_cache_tag = 32 - offset_size;
 
-				memory_stats_init(arch_state_ptr, arch_state.bits_for_cache_tag); 
+				int temp = 32 - cache.index_size - offset_size;
+
+				memory_stats_init(arch_state_ptr, temp); 
 				break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
             	cache.cache_store = malloc(cache.index_total *block_size*sizeof(uint32_t)); 
