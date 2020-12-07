@@ -32,6 +32,7 @@ struct cache_sucks
 	int LRU;
 	int index_total;
 	int index_size;
+	int tag_size;
 	int last_pushed; // index for the last one pushed
 	int next_pop; // index for the next one to pop
 } cache;
@@ -72,6 +73,8 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 					*(cache.cache_store + i*block_parts + 2) = 0;
 					*(cache.cache_store + i*block_parts + 3) = 0;
 				}	
+
+				arch_state.bits_for_cache_tag = 32 - index_size - offset_size;
 				break;
 
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
@@ -85,6 +88,8 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 					*(cache.cache_store + i*block_parts + 2) = 0;
 					*(cache.cache_store + i*block_parts + 3) = 0;
 				}	
+				
+				arch_state.bits_for_cache_tag = 32 - offset_size;
 				break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
             	cache.cache_store = (int *) malloc(cache.index_total *block_size*sizeof(uint32_t)); 
@@ -150,15 +155,12 @@ int memory_read(int address)
 				}
 								
 				//return *(cache.cache_store + index_num*block_parts + 2);
-				arch_state.bits_for_cache_tag = tag;
 				return (int) arch_state.memory[address / 4];
 				break;
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
 				
-				arch_state.bits_for_cache_tag = tag;
             	break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
-				arch_state.bits_for_cache_tag = tag;
             	break;
         }
     }
@@ -213,10 +215,8 @@ void memory_write(int address, int write_data)
 				break;
 
        		case CACHE_TYPE_FULLY_ASSOC: // fully associative
-				arch_state.bits_for_cache_tag = tag;
             	break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
-				arch_state.bits_for_cache_tag = tag;
             	break;
 		}
 	}
