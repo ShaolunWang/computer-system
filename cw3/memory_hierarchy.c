@@ -74,7 +74,7 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 					*(cache.cache_store + i*block_parts + 3) = 0;
 				}	
 
-				arch_state.bits_for_cache_tag = 32 - index_size - offset_size;
+				arch_state.bits_for_cache_tag = 32 - cache.index_size - offset_size;
 				break;
 
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
@@ -98,7 +98,7 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
    				for (int i = 0; i < cache.index_total; i++)
 				{
          			*(cache.cache_store + i*block_parts + 0) = 0;
-					*(cache.cache_store + i*block_parts + 1) = -1;
+					*(cache.cache_store + i*block_parts + 1) = 0;
 					*(cache.cache_store + i*block_parts + 2) = 0;
 					*(cache.cache_store + i*block_parts + 3) = 0;
 				}	
@@ -158,7 +158,7 @@ int memory_read(int address)
 				return (int) arch_state.memory[address / 4];
 				break;
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
-				
+					
             	break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
             	break;
