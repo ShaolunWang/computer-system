@@ -367,6 +367,8 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
 	printf("\n--------------------------------------\n");
 	printf("--------------------------------------\n\n");
 */	
+
+	printf("\n");
 }
 
 void assign_pipeline_registers_for_the_next_cycle()
