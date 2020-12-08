@@ -92,7 +92,7 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 				cache.next_pop = 0;
 				cache.empty_block = 0;
 
-				temp = 32 - cache.index_size - offset_size;
+				temp = 32 - offset_size;
 
 				memory_stats_init(arch_state_ptr, temp); 
 				break;
