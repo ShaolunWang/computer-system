@@ -279,6 +279,94 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
     IR_meta->reg_16_20 = (uint8_t) get_piece_of_a_word(IR, 16, REGISTER_ID_SIZE);
     IR_meta->reg_21_25 = (uint8_t) get_piece_of_a_word(IR, 21, REGISTER_ID_SIZE);
     IR_meta->type = get_instruction_type(IR_meta->opcode);
+	switch (IR_meta->opcode)
+	{
+        case SPECIAL:
+            if (IR_meta->function == ADD)
+			{
+
+                printf("Executing ADD(%d): $%u = $%u + $%u (function: %u) \n",
+					IR_meta->opcode,  
+					IR_meta->reg_11_15, 
+					IR_meta->reg_21_25,  
+					IR_meta->reg_16_20, 
+					IR_meta->function);
+			}
+			else if (IR_meta->function == SLT)
+			{
+				printf("Executing SLT(%d): $%u = $%u < $%u (function: %u) \n",
+					IR_meta->opcode, 
+					IR_meta->reg_11_15, 
+					IR_meta->reg_21_25,  
+					IR_meta->reg_16_20, 
+					IR_meta->function);
+			}
+			else if (IR_meta->function == ADDU)
+			{
+				printf("Executing ADDU(%d): $%u = $%u + $%u (function: %u) \n",
+					IR_meta->opcode,  
+					IR_meta->reg_11_15,
+					IR_meta->reg_21_25,  
+					IR_meta->reg_16_20, 
+					IR_meta->function);
+			}
+            else 
+				assert(false);
+           	break;
+
+		case LW:
+		
+			printf("Executing LW(%d): $%u = %u($%u)\n", 
+					IR_meta->opcode, 
+					IR_meta->reg_16_20, 
+					IR_meta->immediate,
+					IR_meta->reg_21_25);
+			break;
+		
+		case SW:
+			printf("Executing SW(%d): $%u = %u($%u)\n", 
+					IR_meta->opcode, 
+					IR_meta->reg_16_20, 
+					IR_meta->immediate,
+					IR_meta->reg_21_25);
+			break;
+		case BEQ:
+			printf("Executing BEQ(%d): if ($%u == $%u) do %u\n",
+					IR_meta->opcode, 
+					IR_meta->reg_16_20, 
+					IR_meta->reg_21_25, 
+					IR_meta->immediate);
+			break;
+		case ADDI:
+			printf("Executing ADDI(%d): $%u = $%u + %u \n",
+					IR_meta->opcode, 
+					IR_meta->reg_16_20, 
+					IR_meta->reg_21_25, 
+					IR_meta->immediate);
+			break;
+		case J:
+			printf("Executing J(%d): %u\n", 
+					IR_meta->opcode, IR_meta->jmp_offset);
+			break;
+        case EOP:
+            printf("Executing EOP(%d) \n", IR_meta->opcode);
+            break;
+        default: assert(false);
+    }
+
+/*	
+	printf("\n");
+
+	printf("cycle: %lu\n", arch_state.clock_cycle);
+	for(int j = 0; j < 32;j++)
+	{
+		if (arch_state.registers[j] != 0)
+			printf("$%d : %d \n", j, arch_state.registers[j]);
+	}
+	
+	printf("\n--------------------------------------\n");
+	printf("--------------------------------------\n\n");
+*/	
 }
 
 void assign_pipeline_registers_for_the_next_cycle()
