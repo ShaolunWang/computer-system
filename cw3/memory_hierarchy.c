@@ -152,7 +152,7 @@ int memory_read(int address)
 
  					if ((int) *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) == (int) arch_state.memory[address/4],(int) arch_state.memory[address / 4]);
 					    printf("cache: %u, mem: %u\n", (int) *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)),(int) arch_state.memory[address / 4]);
-					return (int) arch_state.memory[address / 4];
+					return (int) *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t))/4;
 					break;
 
 
@@ -174,7 +174,7 @@ int memory_read(int address)
 						*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 1;
 						
 						arch_state.mem_stats.lw_cache_hits++;
-						return (int) arch_state.memory[address / 4];
+						return (int) *(cache.cache_store +4* i * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t))/4;
 
 						break;
 					}
@@ -206,7 +206,7 @@ int memory_read(int address)
 				
 				
 				
-				return (int) arch_state.memory[address / 4];
+				return (int) *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t))/4;
 
             	break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
