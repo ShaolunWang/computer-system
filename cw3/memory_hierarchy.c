@@ -174,7 +174,8 @@ int memory_read(int address)
                         *(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 1;
 
                         arch_state.mem_stats.lw_cache_hits++;
-                        return (int) arch_state.memory[address / 4];
+                        
+                		return (int) arch_state.memory[address / 4];
 
                         break;
                     }
@@ -253,7 +254,8 @@ void memory_write(int address, int write_data)
                     *(cache.cache_store+4* index_num*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (uint32_t) write_data;
                     //arch_state.memory[address / 4] = *(cache.cache_store+ index_num*block_parts + 2);
 
-                    arch_state.memory[address / 4] = *(cache.cache_store+4* index_num*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t));
+                    
+        			arch_state.memory[address / 4] = (uint32_t) write_data;
                 }
                 else
                 {
@@ -273,7 +275,8 @@ void memory_write(int address, int write_data)
 
                         arch_state.mem_stats.sw_cache_hits++;
 
-                        arch_state.memory[address / 4] = *(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t));
+                        
+        				arch_state.memory[address / 4] = (uint32_t) write_data;
                         break;
                     }
 
