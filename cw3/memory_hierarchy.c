@@ -14,8 +14,8 @@
 *	3. Cache block size is 16 bytes
 *	4. Cache holds both instructions and data (this is called a unified cache)
 *	5. Cache uses a write-through policy
-*	6. Cache uses a write-no-allocate policy; 
-*			i.e.: if a store does not find the target block in the cache, 
+*	6. Cache uses a write-no-allocate policy;
+*			i.e.: if a store does not find the target block in the cache,
 *				  it does not allocate it.
 *	7. LRU replacement policy (when applicable)
 */
@@ -29,80 +29,80 @@ int temp;
 
 struct cache_sucks
 {
-	int *cache_store;
-	int index_total;
-	int index_size;
-	int curr_pushed;
-	int empty_block;
+    int *cache_store;
+    int index_total;
+    int index_size;
+    int curr_pushed;
+    int empty_block;
 
 } cache;
 
 void memory_state_init(struct architectural_state *arch_state_ptr)
 {
-	
-	
+
+
     arch_state_ptr->memory = (uint32_t *) malloc(sizeof(uint32_t) * MEMORY_WORD_NUM);
     memset(arch_state_ptr->memory, 0, sizeof(uint32_t) * MEMORY_WORD_NUM);
     if (cache_size == 0)
-	{
+    {
         // CACHE DISABLED
         memory_stats_init(arch_state_ptr, 0); // WARNING: we initialize for no cache 0
-    } 
-	else
-	{
-        
-		cache.index_total      = cache_size / block_size;
-		cache.index_size       = (int) log2((double) cache.index_total);
+    }
+    else
+    {
+
+        cache.index_total      = cache_size / block_size;
+        cache.index_size       = (int) log2((double) cache.index_total);
 
         switch(cache_type)
-		{
-        	case CACHE_TYPE_DIRECT: // direct mapped
-			
-				
-   				cache.cache_store = malloc(cache.index_total *block_size*4*sizeof(uint32_t));
+        {
+            case CACHE_TYPE_DIRECT: // direct mapped
 
-   				for (int i = 0; i < cache.index_total; i++)
-				{
-         			*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 0*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 0;
-				}	
 
-				temp = 32 - cache.index_size - offset_size;
+                cache.cache_store = malloc(cache.index_total *block_size*4*sizeof(uint32_t));
 
-				memory_stats_init(arch_state_ptr, temp); 
-				break;
+                for (int i = 0; i < cache.index_total; i++)
+                {
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 0*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 0;
+                }
 
-        	case CACHE_TYPE_FULLY_ASSOC: // fully associative
+                temp = 32 - cache.index_size - offset_size;
 
-				cache.cache_store = malloc(4*cache.index_total *block_size*sizeof(uint32_t)); 
-				cache.curr_pushed = 0;
+                memory_stats_init(arch_state_ptr, temp);
+                break;
 
-   				for (int i = 0; i < cache.index_total; i++)
-				{
-         			*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4*0*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 0;
-				}	
-				cache.empty_block = 0;
+            case CACHE_TYPE_FULLY_ASSOC: // fully associative
 
-				temp = 32 - offset_size;
+                cache.cache_store = malloc(4*cache.index_total *block_size*sizeof(uint32_t));
+                cache.curr_pushed = 0;
 
-				memory_stats_init(arch_state_ptr, temp); 
-				break;
-        	case CACHE_TYPE_2_WAY: // 2-way associative
-            	cache.cache_store = malloc(cache.index_total* 4*block_size*sizeof(uint32_t));
+                for (int i = 0; i < cache.index_total; i++)
+                {
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4*0*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 0;
+                }
+                cache.empty_block = 0;
 
-   				for (int i = 0; i < cache.index_total; i++)
-				{
-         			*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 0*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = 0;
-					*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 0;
-				}	
-				break;
+                temp = 32 - offset_size;
+
+                memory_stats_init(arch_state_ptr, temp);
+                break;
+            case CACHE_TYPE_2_WAY: // 2-way associative
+                cache.cache_store = malloc(cache.index_total* 4*block_size*sizeof(uint32_t));
+
+                for (int i = 0; i < cache.index_total; i++)
+                {
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 0*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = 0;
+                    *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 0;
+                }
+                break;
 
         }
     }
@@ -111,106 +111,106 @@ void memory_state_init(struct architectural_state *arch_state_ptr)
 // returns data on memory[address / 4]
 int memory_read(int address)
 {
-	arch_state.mem_stats.lw_total++;
+    arch_state.mem_stats.lw_total++;
     check_address_is_word_aligned(address);
 
     if (cache_size == 0)
-	{
+    {
         // CACHE DISABLED
         return (int) arch_state.memory[address / 4];
     }
 
-	else 
-	{
+    else
+    {
         // CACHE ENABLED
-        
-        // @students: your implementation must properly increment: 
-		// arch_state_ptr->mem_stats.lw_cache_hits
-        
-        switch(cache_type) 
-		{	
-				case CACHE_TYPE_DIRECT: // direct mapped
-				// 1 address to tag and index and offset	
-					;
-				
-					index_num = get_piece_of_a_word(address, offset_size, cache.index_size); 
-					tag 	  = get_piece_of_a_word(address,(offset_size + cache.index_size), (32-offset_size-cache.index_size));
-					int cache_tag = *(cache.cache_store +4* index_num*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t));
-					
-					// This part is some temp values that's already stored in cache
-					// we just make them look horter
-					if (cache_tag == tag) 
-					{
-						arch_state.mem_stats.lw_cache_hits++;
-					}
-					else
-					{
-						*(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t))     = 1; //valid
-						*(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = tag; //tag
-						*(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];//data
-					}
 
- 					if ((int) *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) == (int) arch_state.memory[address/4],(int) arch_state.memory[address / 4]);
-					    printf("cache: %u, mem: %u\n", (int) *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)),(int) arch_state.memory[address / 4]);
-					return (int) *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t))/4;
-					break;
+        // @students: your implementation must properly increment:
+        // arch_state_ptr->mem_stats.lw_cache_hits
 
+        switch(cache_type)
+        {
+            case CACHE_TYPE_DIRECT: // direct mapped
+                // 1 address to tag and index and offset
+                ;
 
+                index_num = get_piece_of_a_word(address, offset_size, cache.index_size);
+                tag 	  = get_piece_of_a_word(address,(offset_size + cache.index_size), (32-offset_size-cache.index_size));
+                int cache_tag = *(cache.cache_store +4* index_num*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t));
+
+                // This part is some temp values that's already stored in cache
+                // we just make them look horter
+                if (cache_tag == tag)
+                {
+                    arch_state.mem_stats.lw_cache_hits++;
+                }
+                else
+                {
+                    *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t))     = 1; //valid
+                    *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = tag; //tag
+                    *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];//data
+                }
+
+                if ((int) *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) == (int) arch_state.memory[address/4],(int) arch_state.memory[address / 4]);
+                printf("cache: %u, mem: %u\n", (int) *(cache.cache_store +4* index_num * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)),(int) arch_state.memory[address / 4]);
+                return (int) arch_state.memory[address / 4];
+                break;
 
 
 
 
 
-        	case CACHE_TYPE_FULLY_ASSOC: // fully associative
-				
-				;
-				tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
 
-				for (int i = 0;i < cache.index_size;i++)
-				{
-					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) == tag
-							&& *(cache.cache_store +4*i*block_parts*sizeof(uint32_t))==1)
-					{
-						*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 1;
-						
-						arch_state.mem_stats.lw_cache_hits++;
-						return (int) *(cache.cache_store +4* i * block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t))/4;
 
-						break;
-					}
-				}
+            case CACHE_TYPE_FULLY_ASSOC: // fully associative
 
-				if (cache.empty_block < cache.index_total)
-				{
-					*(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t))     = 1;
-					*(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = tag;
-					*(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
-					cache.curr_pushed      = cache.empty_block;
-					*(cache.cache_store + 4*cache.curr_pushed*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t))= cache.index_total + 1 - cache.curr_pushed;
+                ;
+                tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
 
-					cache.empty_block++;
-				}
-				else
-				{
-					for (int i = 0;i < cache.index_total;i++)
-					{
-						if (++*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) == cache.index_total)
-						{
-							*(cache.cache_store +4* i*block_parts*sizeof(uint32_t)) = 1;
-							*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = tag;
-							*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4]; 
-							cache.curr_pushed = i;
-						}
-					}
-				}
-				
-				
-				
-				return (int) *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t))/4;
+                for (int i = 0;i < cache.index_size;i++)
+                {
+                    if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) == tag
+                        && *(cache.cache_store +4*i*block_parts*sizeof(uint32_t))==1)
+                    {
+                        *(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 1;
 
-            	break;
-        	case CACHE_TYPE_2_WAY: // 2-way associative
-            	break;
+                        arch_state.mem_stats.lw_cache_hits++;
+                        return (int) arch_state.memory[address / 4];
+
+                        break;
+                    }
+                }
+
+                if (cache.empty_block < cache.index_total)
+                {
+                    *(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t))     = 1;
+                    *(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = tag;
+                    *(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
+                    cache.curr_pushed      = cache.empty_block;
+                    *(cache.cache_store + 4*cache.curr_pushed*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t))= cache.index_total + 1 - cache.curr_pushed;
+
+                    cache.empty_block++;
+                }
+                else
+                {
+                    for (int i = 0;i < cache.index_total;i++)
+                    {
+                        if (++*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) == cache.index_total)
+                        {
+                            *(cache.cache_store +4* i*block_parts*sizeof(uint32_t)) = 1;
+                            *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = tag;
+                            *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
+                            cache.curr_pushed = i;
+                        }
+                    }
+                }
+
+
+
+                return (int) arch_state.memory[address / 4];
+
+                break;
+            case CACHE_TYPE_2_WAY: // 2-way associative
+                break;
         }
     }
     return 0;
@@ -219,72 +219,72 @@ int memory_read(int address)
 // writes data on memory[address / 4]
 void memory_write(int address, int write_data)
 {
-	arch_state.mem_stats.sw_total++;
+    arch_state.mem_stats.sw_total++;
     check_address_is_word_aligned(address);
-    if (cache_size == 0) 
-	{
+    if (cache_size == 0)
+    {
         // CACHE DISABLED
         arch_state.memory[address / 4] = (uint32_t) write_data;
-    } 
-	else 
-	{
+    }
+    else
+    {
         // CACHE ENABLED
-        
+
         // @students: your implementation must properly increment: arch_state_ptr->mem_stats.sw_cache_hits
-        
-        switch(cache_type) 
-		{
-	        case CACHE_TYPE_DIRECT: // direct mapped
-    	       	
-				;	
-				index_num = get_piece_of_a_word(address, offset_size, cache.index_size);
-				tag = get_piece_of_a_word(address,offset_size+cache.index_size, (32-offset_size-cache.index_size));;
-			//	get_piece_of_a_word(address, INDEX_SIZE + OFFSET_SIZE, TAG_SIZE);
 
-				int cache_tag = *(cache.cache_store +4* index_num*block_parts*sizeof(uint32_t)+ 4*1*sizeof(uint32_t));
-			//	printf("(sw)index: %d tag:%d, cache_tag: %d\n", index_num, tag, cache_tag);	
-				
+        switch(cache_type)
+        {
+            case CACHE_TYPE_DIRECT: // direct mapped
 
-				if (cache_tag == tag) 
-				{
+                ;
+                index_num = get_piece_of_a_word(address, offset_size, cache.index_size);
+                tag = get_piece_of_a_word(address,offset_size+cache.index_size, (32-offset_size-cache.index_size));;
+                //	get_piece_of_a_word(address, INDEX_SIZE + OFFSET_SIZE, TAG_SIZE);
 
-					arch_state.mem_stats.sw_cache_hits++;
+                int cache_tag = *(cache.cache_store +4* index_num*block_parts*sizeof(uint32_t)+ 4*1*sizeof(uint32_t));
+                //	printf("(sw)index: %d tag:%d, cache_tag: %d\n", index_num, tag, cache_tag);
 
-					*(cache.cache_store+4* index_num*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (uint32_t) write_data;
-					//arch_state.memory[address / 4] = *(cache.cache_store+ index_num*block_parts + 2);
 
-					arch_state.memory[address / 4] = *(cache.cache_store+4* index_num*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t));
-				}
-				else
-				{
-					arch_state.memory[address / 4] = (uint32_t) write_data;
-				}
-				break;
+                if (cache_tag == tag)
+                {
 
-       		case CACHE_TYPE_FULLY_ASSOC: // fully associative
+                    arch_state.mem_stats.sw_cache_hits++;
 
-				
-				tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
-				for (int i = 0;i < cache.index_total;i++)
-				{
-					if (*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) == tag)
-					{
-						*(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (uint32_t) write_data;
+                    *(cache.cache_store+4* index_num*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (uint32_t) write_data;
+                    //arch_state.memory[address / 4] = *(cache.cache_store+ index_num*block_parts + 2);
 
-						arch_state.mem_stats.sw_cache_hits++;
+                    arch_state.memory[address / 4] = *(cache.cache_store+4* index_num*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t));
+                }
+                else
+                {
+                    arch_state.memory[address / 4] = (uint32_t) write_data;
+                }
+                break;
 
-						arch_state.memory[address / 4] = *(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t));
-						break;
-					}	
-						
+            case CACHE_TYPE_FULLY_ASSOC: // fully associative
 
-				}
 
-				arch_state.memory[address / 4] = (uint32_t) write_data;
+                tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
+                for (int i = 0;i < cache.index_total;i++)
+                {
+                    if (*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) == tag)
+                    {
+                        *(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (uint32_t) write_data;
 
-            	break;
-        	case CACHE_TYPE_2_WAY: // 2-way associative
-            	break;
-		}
-	}
+                        arch_state.mem_stats.sw_cache_hits++;
+
+                        arch_state.memory[address / 4] = *(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t));
+                        break;
+                    }
+
+
+                }
+
+                arch_state.memory[address / 4] = (uint32_t) write_data;
+
+                break;
+            case CACHE_TYPE_2_WAY: // 2-way associative
+                break;
+        }
+    }
 }
