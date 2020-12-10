@@ -168,7 +168,7 @@ int memory_read(int address)
 				int max_lru = -1;
 				bool a_hit_lw = false;
 				tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
-				for (int i = 0;i < cache.index_size;i++)
+				for (int i = 0;i < cache.index_total;i++)
 				{
 					int curr_valid = *(cache.cache_store +4*i*block_parts*sizeof(uint32_t));
 					int curr_tag   = *(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t));
@@ -242,7 +242,8 @@ int memory_read(int address)
 					
 					for (int i = 0;i < cache.index_total;i++)
 					{
-						int taskdjfkdjfkd = *(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t));				
+						//find max lru
+						int taskdjfkdjfkd = *(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));				
 						if (taskdjfkdjfkd > max_lru)
 						{
 							max_lru = taskdjfkdjfkd;
