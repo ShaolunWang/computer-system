@@ -183,17 +183,17 @@ int memory_read(int address)
 						{
 						
 							int aa = *(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
-							printf("aa: %d\n", aa);
-							if (j!=i && aa++ != 0)
-								*(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = aa;
+							if (j!=i && aa != 0)
+								*(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = ++aa;
 							
+							printf("aa: %d\n", aa);
 						}
 
 						printf("i: %d\n", i);
-						printf("-----------------------------------\n");
+						printf("--------hit----------------------\n");
 
 						return (int) arch_state.memory[address / 4];
-
+					
 					}
 				}
 
@@ -214,13 +214,14 @@ int memory_read(int address)
 
 						int aa =  *(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
 						
-						printf("aa: %d\n", aa);
 
-						if (j != cache.empty_block && aa++ != 0)
-							*(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = aa;
+						if (j != cache.empty_block && aa != 0)
+							*(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = ++aa;
+
+						printf("aa: %d\n", aa);
 						
 					}
-					printf("-----------------------\n");
+					printf("--------empty--------------\n\n");
 					cache.empty_block++;
 					return (int) arch_state.memory[address / 4];
 
@@ -238,26 +239,28 @@ int memory_read(int address)
 						}
 					//	printf("taskdjfkdjfkd %d %d\n",i, taskdjfkdjfkd);
 					}
-					printf("max lru : %d index: %d\n", max_lru, max_lru_index);
 
+					cache.curr_pushed = max_lru_index;				
+					printf("max lru : %d index: %d\n", max_lru, max_lru_index);
+					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t)) = 1;
+					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) = tag;
+					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
+					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
 
 					for (int i = 0;i < cache.index_total;i++)
 					{
 						
 						int aa = *(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
 
-				//		printf("aa: %d %d\n",i, aa);
-						if (i!=max_lru_index && aa++ != 0)
-							*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = aa;
-					}
-					printf("--------------------------\n");
-				
-					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t)) = 1;
-					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) = tag;
-					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
-					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
+						if (i!=max_lru_index && aa != 0)
+							*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = ++aa;
 
-					cache.curr_pushed = max_lru_index;				
+						printf("aa: %d %d\n",i, aa);
+					}
+					printf("---------full-------------\n\n");
+				
+
+
 				}
 				
 				return (int) arch_state.memory[address / 4];
@@ -321,7 +324,7 @@ void memory_write(int address, int write_data)
 				tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
 				for (int i = 0;i < cache.index_total;i++)
 				{
-					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) == tag)
+					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) == tag && *(cache.cache_store ))
 					{
 						*(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (uint32_t) write_data;
 						*(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
@@ -329,19 +332,20 @@ void memory_write(int address, int write_data)
 						arch_state.mem_stats.sw_cache_hits++;
 						cache.curr_pushed = i;
 						arch_state.memory[address / 4] = (uint32_t) write_data;
-						break;
 
 						for (int j = 0;j < cache.index_total;j++)
 						{
 
 							int aa =  *(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
 							
-						//	printf("aa: %d\n", aa);
-							if (j != cache.curr_pushed && aa++ != 0)
-								*(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = aa;
+							if (j != cache.curr_pushed && aa != 0)
+								*(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = ++aa;
+
+							printf("aa: %d\n", aa);
 							
 						}
-
+						printf("i %d\n", i)	;
+						printf("-----------sw---------\n");
 					}	
 						
 
