@@ -166,36 +166,42 @@ int memory_read(int address)
 				;
 				int max_lru_index;
 				int max_lru = -1;
-
+				bool a_hit_lw = false;
 				tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
-
 				for (int i = 0;i < cache.index_size;i++)
 				{
-					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) == tag
-							&& *(cache.cache_store +4*i*block_parts*sizeof(uint32_t))==1)
+					int curr_valid = *(cache.cache_store +4*i*block_parts*sizeof(uint32_t));
+					int curr_tag   = *(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t));
+					printf("curr_tag: %d, tag: %d, are they equal: %s,", curr_tag, tag, curr_tag == tag ?"true":"false");
+					printf(" is it valid: %s\n", curr_valid == 1 ? "true":"false");
+					if (curr_tag == tag && curr_valid == 1)
 					{
 						//if a hit:
 						*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
 						
-						arch_state.mem_stats.lw_cache_hits++;
 						cache.curr_pushed = i;	
-						for (int j = 0;j < cache.index_total;j++)
-						{
-						
-							int aa = *(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
-							if (j!=i && aa != 0)
-								*(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = ++aa;
-							
-							printf("aa: %d\n", aa);
-						}
-
+						a_hit_lw = true;	
 						printf("i: %d\n", i);
 						printf("--------hit----------------------\n");
-
-						return (int) arch_state.memory[address / 4];
 					
 					}
 				}
+
+				if (a_hit_lw == true)
+				{
+					for (int j = 0;j < cache.index_total;j++)
+					{
+						
+						int aa = *(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
+						if (j!= cache.curr_pushed && aa != 0)
+							*(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = ++aa;
+						
+						printf("aa: %d\n", aa);
+					}
+					arch_state.mem_stats.lw_cache_hits++;
+					return (int) arch_state.memory[address / 4];
+				}
+				
 
 
 
@@ -204,13 +210,16 @@ int memory_read(int address)
 				if (cache.empty_block < cache.index_total)
 				{
 					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t))     = 1;
-					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = tag;
-					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
-					*(cache.cache_store + 4*cache.empty_block*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t))= 1;
+					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) = tag;
+					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
+					*(cache.cache_store + 4*cache.empty_block*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t))= 1;
 
 					cache.curr_pushed = cache.empty_block;
+					
+
 					for (int j = 0;j < cache.index_total;j++)
 					{
+						//update
 
 						int aa =  *(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
 						
@@ -221,6 +230,8 @@ int memory_read(int address)
 						printf("aa: %d\n", aa);
 						
 					}
+
+
 					printf("--------empty--------------\n\n");
 					cache.empty_block++;
 					return (int) arch_state.memory[address / 4];
@@ -320,38 +331,46 @@ void memory_write(int address, int write_data)
 
        		case CACHE_TYPE_FULLY_ASSOC: // fully associative
 				
-				
+				;	
+				bool a_hit_sw = false;
 				tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
 				for (int i = 0;i < cache.index_total;i++)
 				{
-					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) == tag && *(cache.cache_store ))
+						
+					int curr_valid = *(cache.cache_store +4* i*block_parts*sizeof(uint32_t));
+					int curr_tag   =*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)); 
+					if (curr_tag == tag &&  curr_valid==1)
 					{
 						*(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (uint32_t) write_data;
 						*(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
 
-						arch_state.mem_stats.sw_cache_hits++;
 						cache.curr_pushed = i;
 						arch_state.memory[address / 4] = (uint32_t) write_data;
-
-						for (int j = 0;j < cache.index_total;j++)
-						{
-
-							int aa =  *(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
-							
-							if (j != cache.curr_pushed && aa != 0)
-								*(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = ++aa;
-
-							printf("aa: %d\n", aa);
-							
-						}
-						printf("i %d\n", i)	;
-						printf("-----------sw---------\n");
+						a_hit_sw = true;
 					}	
 						
 
 				}
+				if (a_hit_sw == true)
+				{
+					
+					arch_state.mem_stats.sw_cache_hits++;
+					for (int j = 0;j < cache.index_total;j++)
+					{
+						int aa =  *(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
+						
+						if (j != cache.curr_pushed && aa != 0)
+							*(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = ++aa;
 
-				arch_state.memory[address / 4] = (uint32_t) write_data;
+						printf("aa: %d\n", aa);
+							
+					}
+						printf("i %d\n", cache.curr_pushed)	;
+						printf("-----------sw---------\n");
+
+				}
+				else
+					arch_state.memory[address / 4] = (uint32_t) write_data;
 
             	break;
         	case CACHE_TYPE_2_WAY: // 2-way associative
