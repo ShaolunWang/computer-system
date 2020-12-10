@@ -279,7 +279,7 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
     IR_meta->reg_16_20 = (uint8_t) get_piece_of_a_word(IR, 16, REGISTER_ID_SIZE);
     IR_meta->reg_21_25 = (uint8_t) get_piece_of_a_word(IR, 21, REGISTER_ID_SIZE);
     IR_meta->type = get_instruction_type(IR_meta->opcode);
-	switch (IR_meta->opcode)
+/*	switch (IR_meta->opcode)
 	{
         case SPECIAL:
             if (IR_meta->function == ADD)
@@ -353,7 +353,7 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
             break;
         default: assert(false);
     }
-
+*/
 /*	
 	printf("\n");
 
@@ -368,7 +368,7 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
 	printf("--------------------------------------\n\n");
 */	
 
-	printf("\n");
+//	printf("\n");
 }
 
 void assign_pipeline_registers_for_the_next_cycle()
