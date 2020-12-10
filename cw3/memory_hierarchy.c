@@ -164,38 +164,40 @@ int memory_read(int address)
         	case CACHE_TYPE_FULLY_ASSOC: // fully associative
 				
 				;
+				int max_lru_index;
 				int max_lru = -1;
 
 				tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
 
 				for (int i = 0;i < cache.index_size;i++)
 				{
-					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) == tag
+					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) == tag
 							&& *(cache.cache_store +4*i*block_parts*sizeof(uint32_t))==1)
 					{
 						//if a hit:
-						*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) = 1;
+						*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
 						
 						arch_state.mem_stats.lw_cache_hits++;
+
 						for (int j = 0;j < cache.index_total;j++)
 						{
 						
-							int aa = *(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t));
-							if (j!=max_lru && aa++ != 0)
+							int aa = *(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
+							printf("aa: %d\n", aa);
+							if (j!=i && aa++ != 0)
 								*(cache.cache_store + 4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = aa;
 						}
 
 						return (int) arch_state.memory[address / 4];
 
-						break;
 					}
 				}
-
+				//not a hit
 				if (cache.empty_block < cache.index_total)
 				{
-					*(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t))     = 1;
-					*(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = tag;
-					*(cache.cache_store +4* cache.empty_block*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
+					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t))     = 1;
+					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) = tag;
+					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
 					cache.curr_pushed      = cache.empty_block;
 					*(cache.cache_store + 4*cache.curr_pushed*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t))= 1;
 
@@ -206,24 +208,31 @@ int memory_read(int address)
 					
 					for (int i = 0;i < cache.index_total;i++)
 					{
-												
-						if (*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t)) > max_lru)
-							max_lru = i ;
+						int taskdjfkdjfkd = *(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t));				
+						if (taskdjfkdjfkd > max_lru)
+						{
+							max_lru = taskdjfkdjfkd;
+							max_lru_index = i;
+						}
+						printf("taskdjfkdjfkd %d %d\n",i, taskdjfkdjfkd);
 					}
-
+					printf("max lru : %d index: %d\n", max_lru, max_lru_index);
 					for (int i = 0;i < cache.index_total;i++)
 					{
 						
-						int aa = *(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t));
-						if (i!=max_lru && aa++ != 0)
+						int aa = *(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
+
+						printf("aa: %d %d\n",i, aa);
+						if (i!=max_lru_index && aa++ != 0)
 							*(cache.cache_store + 4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = aa;
 					}
 				
-				*(cache.cache_store +4* max_lru*block_parts*sizeof(uint32_t)) = 1;
-				*(cache.cache_store +4* max_lru*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) = tag;
-				*(cache.cache_store +4* max_lru*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
+					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t)) = 1;
+					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) = tag;
+					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
+					*(cache.cache_store +4*max_lru_index*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
 				}
-				cache.curr_pushed = max_lru;				
+				cache.curr_pushed = max_lru_index;				
 				
 				return (int) arch_state.memory[address / 4];
 
@@ -286,7 +295,7 @@ void memory_write(int address, int write_data)
 				tag  = get_piece_of_a_word(address,offset_size, (32-offset_size));
 				for (int i = 0;i < cache.index_total;i++)
 				{
-					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t)) == tag)
+					if (*(cache.cache_store +4*i*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) == tag)
 					{
 						*(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (uint32_t) write_data;
 						*(cache.cache_store+4*i*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
@@ -300,8 +309,11 @@ void memory_write(int address, int write_data)
 						{
 
 							int aa =  *(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
+							
+							printf("aa: %d\n", aa);
 							if (j != cache.curr_pushed && aa++ != 0)
 								*(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = aa;
+							
 						}
 
 					}	
