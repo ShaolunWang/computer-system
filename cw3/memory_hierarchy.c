@@ -200,6 +200,16 @@ int memory_read(int address)
 					*(cache.cache_store +4*cache.empty_block*block_parts*sizeof(uint32_t) +4* 2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
 					cache.curr_pushed      = cache.empty_block;
 					*(cache.cache_store + 4*cache.curr_pushed*block_parts*sizeof(uint32_t) +4* 3*sizeof(uint32_t))= 1;
+					for (int j = 0;j < cache.index_total;j++)
+						{
+
+							int aa =  *(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
+							
+							printf("aa: %d\n", aa);
+							if (j != cache.curr_pushed && aa++ != 0)
+								*(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = aa;
+							
+						}
 
 					cache.empty_block++;
 				}
@@ -230,7 +240,7 @@ int memory_read(int address)
 					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t)) = 1;
 					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*1*sizeof(uint32_t)) = tag;
 					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
-					*(cache.cache_store +4*max_lru_index*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
+					*(cache.cache_store +4* max_lru_index*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) = 1;
 				}
 				cache.curr_pushed = max_lru_index;				
 				
@@ -305,7 +315,7 @@ void memory_write(int address, int write_data)
 						arch_state.memory[address / 4] = (uint32_t) write_data;
 						break;
 
-						for (int j = 0;j < cache.index_total;i++)
+						for (int j = 0;j < cache.index_total;j++)
 						{
 
 							int aa =  *(cache.cache_store+4*j*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t));
