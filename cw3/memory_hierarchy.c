@@ -329,18 +329,7 @@ int memory_read(int address)
 					else	
 					{
 						bool an_empty_set = false;
-						if (*(cache.cache_store+4*(index_num)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)) >= *(cache.cache_store+4*(index_num+1)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)))
-						{
-							*(cache.cache_store +4* (index_num) * block_parts*sizeof(uint32_t))     = 1; //valid
-							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = tag; 
-							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t))
-								= (int) arch_state.memory[address / 4];
-							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 1;
-
-							cache.curr_set = index_num;
-							cache.curr_pushed = 0;
-						}
-						else if(*(cache.cache_store+4*(index_num)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)) == 0)
+						if(*(cache.cache_store+4*(index_num)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)) == 0)
 						{
 							*(cache.cache_store +4* (index_num) * block_parts*sizeof(uint32_t))     = 1; //valid
 							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = tag; 
@@ -363,6 +352,18 @@ int memory_read(int address)
 							cache.curr_pushed = 1;
 						}
 
+						else if (*(cache.cache_store+4*(index_num)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)) > *(cache.cache_store+4*(index_num+1)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)))
+						{
+							*(cache.cache_store +4* (index_num) * block_parts*sizeof(uint32_t))     = 1; //valid
+							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = tag; 
+							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t))
+								= (int) arch_state.memory[address / 4];
+							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 1;
+
+							cache.curr_set = index_num;
+							cache.curr_pushed = 0;
+						}
+						
 						else
 						{
 							*(cache.cache_store +4* (index_num+1) * block_parts*sizeof(uint32_t))     = 1; //valid
