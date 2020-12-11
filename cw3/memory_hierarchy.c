@@ -19,6 +19,7 @@
 *				  it does not allocate it.
 *	7. LRU replacement policy (when applicable)
 */
+#define LRU_MAX 2
 uint32_t cache_type = 0;
 int block_size  = 16; //without those metadata, tag valid etc
 int block_parts = 4; // tag, valid, data, last pushed
@@ -35,7 +36,6 @@ bool a_hit_lw = false;
 
 struct cache_sucks
 {
-	int curr_not_pushed;
 	int *cache_store;
 	int index_total;
 	int index_size;
@@ -313,7 +313,7 @@ int memory_read(int address)
 					tag 	  = get_piece_of_a_word(address,(offset_size + cache.index_size), (32-offset_size-cache.index_size));
 					int index_0 = *(cache.cache_store +4*index_num*2* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t));
 					int index_1 = *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t));
-					for (int i = 0; i < cache.index_total*2; i++)
+				/*	for (int i = 0; i < cache.index_total*2; i++)
 					{
 						printf("%d th valid:%d	\n",i,*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 0*sizeof(uint32_t)));
 
@@ -323,7 +323,7 @@ int memory_read(int address)
 
 						printf("%d th LRU:%d	\n",i,*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 0*sizeof(uint32_t)));
 					}	
-
+*/
 					/*
 					for (int i = 0;i < 2;i++)
 					{
@@ -379,8 +379,8 @@ int memory_read(int address)
 							int askdljfk =  *(cache.cache_store +4*(index_num*2 + j)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t));
 							if (askdljfk != 0 && j != cache.curr_pushed)
 							{
-								printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, j, 100);
-								*(cache.cache_store +4*(index_num + j)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 100;
+								printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, j, 2);
+								*(cache.cache_store +4*(index_num*2 + j)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 2;
 							}
 						}
 						
@@ -404,49 +404,59 @@ int memory_read(int address)
 							{
 								cache.curr_pushed = i;
 								isEmptyCase = true;
-								printf("is Empty\n");
+								printf("is Empty i % d\n", i);
 								break;
 							}
 						}
 
 						if (isEmptyCase)
 						{
-							*(cache.cache_store
-									+4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t)) = 1; //valid
-							*(cache.cache_store 
-									+4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*sizeof(uint32_t)) = tag;
-							*(cache.cache_store 
-									+4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
-							*(cache.cache_store 
-									+4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =1; 
-							if (*(cache.cache_store 
-										+4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) != 0) 
-								*(cache.cache_store 
-										+4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =100; 
+						
+							*(cache.cache_store+4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t)) = 1; //valid
+							*(cache.cache_store+4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*sizeof(uint32_t)) = tag;
+							*(cache.cache_store+4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];//
+							*(cache.cache_store+4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =1;
+							printf("%d ^ \n",*(cache.cache_store+4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)));
+							if (*(cache.cache_store+4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) != 0)
+							{
+								printf("mark %d \n", 1-cache.curr_pushed + index_num*2);
+								*(cache.cache_store+4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 100;
+								printf("%d ^ \n",*(cache.cache_store+4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)));
+
+
+							}
+
+								return (int) arch_state.memory[address / 4];
 						}
 						else
 						{
+							printf("this?\n");
 							if (*(cache.cache_store +4*index_num*2* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) > *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)))	
 							{
+								
+								printf("this?\n");
 								cache.curr_pushed = 0;	
-								cache.curr_not_pushed = 1;
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t)) = 1; //valid
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*sizeof(uint32_t)) = tag;
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =1; 
-								*(cache.cache_store +4*(index_num*2+cache.curr_not_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =100; 
+								*(cache.cache_store +4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =2; 
+								return (int) arch_state.memory[address / 4];
 
 							}
 							else if(*(cache.cache_store +4*index_num*2* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) < *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)))
 
 							{
+								printf("this?\n");
 								cache.curr_pushed = 1;	
-								cache.curr_not_pushed = 0;
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t)) = 1; //valid
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*sizeof(uint32_t)) = tag;
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =1; 
-								*(cache.cache_store +4*(index_num*2+cache.curr_not_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =100; 
+								*(cache.cache_store +4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =2; 
+
+								return (int) arch_state.memory[address / 4];
+
 
 							}
 							else
@@ -459,6 +469,8 @@ int memory_read(int address)
 
 
 					//	printf("after: curr: %d, index 0: %d index 1: %d\n",cache.curr_pushed, *(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)), *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)));
+					//
+					/*
 						for (int i = 0; i < cache.index_total*2; i++)
 						{
 							printf("%d th valid:%d	\n",i,*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 0*sizeof(uint32_t)));
@@ -471,7 +483,7 @@ int memory_read(int address)
 						}	
 
 						printf("------------miss---------\n\n");
-
+*/
 						return (int) arch_state.memory[address / 4];
 					}
 		}
@@ -575,6 +587,7 @@ void memory_write(int address, int write_data)
 
         	case CACHE_TYPE_2_WAY: // 2-way associative
 				;
+				/*
 				for (int i = 0; i < cache.index_total*2; i++)
 				{
 					printf("%d th valid:%d	\n",i,*(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 0*sizeof(uint32_t)));
@@ -585,13 +598,13 @@ void memory_write(int address, int write_data)
 
 					printf("%d th LRU:%d	\n",i, *(cache.cache_store +4* i*block_parts*sizeof(uint32_t) +4* 0*sizeof(uint32_t)));
 				}	
-
+*/
 				a_hit_sw = false;	
 
 				index_num = get_piece_of_a_word(address, offset_size, cache.index_size); 
 				tag 	  = get_piece_of_a_word(address,(offset_size + cache.index_size), (32-offset_size-cache.index_size));
 				
-				int index_0 = *(cache.cache_store +    4*index_num*2* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t));
+				int index_0 = *(cache.cache_store +4*index_num*2* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t));
 				int index_1 = *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t));
 
 				if (index_0 == index_1 && index_0 != 0)
@@ -600,7 +613,7 @@ void memory_write(int address, int write_data)
 				}
 				printf("index_num: %d \n", index_num*2);
 				printf("before every LRU(sw): %d, %d\n", index_0, index_1);			
-				for (int i = 0;i < 2;i++)
+			/*	for (int i = 0;i < 2;i++)
 				{
 					int curr_valid = *(cache.cache_store +4*(index_num*2+i)*block_parts*sizeof(uint32_t));
 					cache_tag = *(cache.cache_store  +4*(index_num*2+i)*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t));
@@ -613,7 +626,7 @@ void memory_write(int address, int write_data)
 						break;
 					}
 				}
-
+*/
 				if (a_hit_sw == true)
 				{
 					printf("before:curr: X index 0: %d index 1: %d\n", *(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)), *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)));
@@ -626,8 +639,8 @@ void memory_write(int address, int write_data)
 						if( *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) != 0)
 						{
 
-							printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, 1, 100);
-							*(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) = 100;
+							printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, 1, 2);
+							*(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) = 2;
 						}
 					}				
 					else
@@ -636,8 +649,8 @@ void memory_write(int address, int write_data)
 						if( *(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) != 0)
 						{
 
-							printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, 0, 100);
-							*(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) = 100;
+							printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, 0, 2);
+							*(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) = 2;
 						}
 					}
 
