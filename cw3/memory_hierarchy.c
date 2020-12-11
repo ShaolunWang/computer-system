@@ -425,6 +425,7 @@ int memory_read(int address)
 
 
 							}
+							printf("------miss-----\n");
 
 								return (int) arch_state.memory[address / 4];
 						}
@@ -440,8 +441,10 @@ int memory_read(int address)
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*sizeof(uint32_t)) = tag;
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =1; 
-								*(cache.cache_store +4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =2; 
+								*(cache.cache_store +4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =100; 
 								return (int) arch_state.memory[address / 4];
+
+								printf("------miss-----\n");
 
 							}
 							else if(*(cache.cache_store +4*index_num*2* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) < *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)))
@@ -453,8 +456,9 @@ int memory_read(int address)
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*sizeof(uint32_t)) = tag;
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =1; 
-								*(cache.cache_store +4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =2; 
-
+								*(cache.cache_store +4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =100; 
+								printf("------miss-----\n");
+								
 								return (int) arch_state.memory[address / 4];
 
 
