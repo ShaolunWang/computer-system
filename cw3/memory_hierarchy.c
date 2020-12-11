@@ -380,7 +380,7 @@ int memory_read(int address)
 							if (askdljfk != 0 && j != cache.curr_pushed)
 							{
 								printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, j, 2);
-								*(cache.cache_store +4*(index_num*2 + j)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 2;
+								*(cache.cache_store +4*(index_num*2 + j)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 100;
 							}
 						}
 						
@@ -431,7 +431,6 @@ int memory_read(int address)
 						}
 						else
 						{
-							printf("this?\n");
 							if (*(cache.cache_store +4*index_num*2* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) > *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)))	
 							{
 								
@@ -442,9 +441,10 @@ int memory_read(int address)
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t)) = (int) arch_state.memory[address / 4];
 								*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =1; 
 								*(cache.cache_store +4*(index_num*2+(1-cache.curr_pushed))* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) =100; 
+								printf("------miss-----\n");
+
 								return (int) arch_state.memory[address / 4];
 
-								printf("------miss-----\n");
 
 							}
 							else if(*(cache.cache_store +4*index_num*2* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) < *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)))
@@ -637,27 +637,7 @@ void memory_write(int address, int write_data)
 
 					arch_state.mem_stats.sw_cache_hits++;
 					*(cache.cache_store +4*(index_num*2+cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) = 1;
-					if (cache.curr_pushed == 0)
-					{
-
-						if( *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) != 0)
-						{
-
-							printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, 1, 2);
-							*(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) = 2;
-						}
-					}				
-					else
-					{
-
-						if( *(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)) != 0)
-						{
-
-							printf("changing index_num*2: %d, index: %d with value of %d\n", index_num*2, 0, 2);
-							*(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t)+ 4*3*sizeof(uint32_t)) = 2;
-						}
-					}
-
+					*(cache.cache_store +4*(index_num*2+1-cache.curr_pushed)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t))=100;	
 					printf("after: curr: %d index 0: %d index 1: %d\n",cache.curr_pushed, *(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)), *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)));
 					printf("-----------sw hit-----------\n\n");
 
