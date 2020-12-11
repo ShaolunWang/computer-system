@@ -613,7 +613,7 @@ void memory_write(int address, int write_data)
 				}
 				printf("index_num: %d \n", index_num*2);
 				printf("before every LRU(sw): %d, %d\n", index_0, index_1);			
-			/*	for (int i = 0;i < 2;i++)
+				for (int i = 0;i < 2;i++)
 				{
 					int curr_valid = *(cache.cache_store +4*(index_num*2+i)*block_parts*sizeof(uint32_t));
 					cache_tag = *(cache.cache_store  +4*(index_num*2+i)*block_parts*sizeof(uint32_t) +4* 1*sizeof(uint32_t));
@@ -626,7 +626,7 @@ void memory_write(int address, int write_data)
 						break;
 					}
 				}
-*/
+
 				if (a_hit_sw == true)
 				{
 					printf("before:curr: X index 0: %d index 1: %d\n", *(cache.cache_store +4*(index_num*2)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)), *(cache.cache_store +4*(index_num*2+1)* block_parts*sizeof(uint32_t) + 4*3*sizeof(uint32_t)));
