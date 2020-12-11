@@ -326,7 +326,7 @@ int memory_read(int address)
 						if (cache.curr_pushed == 0)
 						{
 							*(cache.cache_store 
-								+4*(index_num+cache.curr_pushed+1)
+								+4*(index_num+1)
 								* block_parts*sizeof(uint32_t) 
 								+ 4*3*sizeof(uint32_t)) = 2;
 						}
@@ -343,10 +343,9 @@ int memory_read(int address)
 					}
 					else	
 					{
-						bool an_empty_set = false;
 						if(*(cache.cache_store+4*(index_num)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)) == 0)
 						{
-							*(cache.cache_store +4* (index_num) * block_parts*sizeof(uint32_t))     = 1; //valid
+							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t))     = 1; //valid
 							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = tag; 
 							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t))
 								= (int) arch_state.memory[address / 4];
@@ -371,9 +370,9 @@ int memory_read(int address)
 							cache.curr_pushed = 1;
 						}
 
-						else if (*(cache.cache_store+4*(index_num)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)) > *(cache.cache_store+4*(index_num+1)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)))
+						else if (*(cache.cache_store+4*(index_num)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)) >= *(cache.cache_store+4*(index_num+1)*block_parts*sizeof(uint32_t)+4*3*sizeof(uint32_t)))
 						{
-							*(cache.cache_store +4* (index_num) * block_parts*sizeof(uint32_t))     = 1; //valid
+							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t))     = 1; //valid
 							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = tag; 
 							*(cache.cache_store +4*(index_num)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t))
 								= (int) arch_state.memory[address / 4];
@@ -386,7 +385,7 @@ int memory_read(int address)
 						
 						else
 						{
-							*(cache.cache_store +4* (index_num+1) * block_parts*sizeof(uint32_t))     = 1; //valid
+							*(cache.cache_store +4*(index_num+1) * block_parts*sizeof(uint32_t))     = 1; //valid
 							*(cache.cache_store +4*(index_num+1)* block_parts*sizeof(uint32_t) + 4*1*sizeof(uint32_t)) = tag; 
 							*(cache.cache_store +4*(index_num+1)* block_parts*sizeof(uint32_t) + 4*2*sizeof(uint32_t))
 								= (int) arch_state.memory[address / 4];
@@ -513,38 +512,39 @@ void memory_write(int address, int write_data)
 				
 				for (int i = 0;i < 2;i++)
 				{
-					int cache_tag = *(cache.cache_store
-							+4*(index_num+i)*block_parts*sizeof(uint32_t)+ 4*1*sizeof(uint32_t));
+					int cache_tag = *(cache.cache_store	+4*(index_num+i)*block_parts*sizeof(uint32_t)+ 4*1*sizeof(uint32_t));
 					
-					int curr_valid = *(cache.cache_store +4* i*block_parts*sizeof(uint32_t));
+					int curr_valid = *(cache.cache_store +4*(index_num+i)*block_parts*sizeof(uint32_t));
 					//	printf("(sw)index: %d tag:%d, cache_tag: %d\n", index_num, tag, cache_tag);	
 
 
 					if (cache_tag == tag && curr_valid == 1) 
 					{
-
-						arch_state.mem_stats.sw_cache_hits++;
-
-						*(cache.cache_store 
-								+4*(index_num+i)*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (uint32_t) write_data;
-						//arch_state.memory[address / 4] = *(cache.cache_store+ index_num*block_parts + 2);
-						if(i == 0)
-						{
-								*(cache.cache_store +4*(index_num+i)*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) =1;
-								*(cache.cache_store +4*(index_num+i+1)*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) =2;
-
-						}
-						else
-						{
-							*(cache.cache_store +4*(index_num+i)*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) =1;
-							*(cache.cache_store +4*(index_num)*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) =2;
-
-						}
-
+						a_hit_sw = true;
+						cache.curr_pushed = i;
 					}
 				}
+				if (a_hit_sw)
+				{
 
-				
+					arch_state.mem_stats.sw_cache_hits++;
+					*(cache.cache_store+4*(index_num+cache.curr_pushed)*block_parts*sizeof(uint32_t) +4*2*sizeof(uint32_t)) = (uint32_t) write_data;
+
+					if(cache.curr_pushed == 0)
+					{
+						*(cache.cache_store +4*(index_num)*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) =1;
+						*(cache.cache_store +4*(index_num+1)*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) =2;
+
+					}
+					else
+					{
+						*(cache.cache_store +4*(index_num+1)*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) =1;
+						*(cache.cache_store +4*(index_num)*block_parts*sizeof(uint32_t) +4*3*sizeof(uint32_t)) =2;
+
+					}
+
+				}
+							
 				arch_state.memory[address / 4] = (uint32_t) write_data;
 
 				
