@@ -425,7 +425,7 @@ int memory_read(int address)
 
 
 							}
-							printf("------miss-----\n");
+								printf("------miss-----\n");
 
 								return (int) arch_state.memory[address / 4];
 						}
